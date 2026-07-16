@@ -10,8 +10,7 @@ struct PatrTask{
     task_t task;
     PatrTask(size_t first, task_t task): first(first), task(task) {}
     PatrTask() : first(0), task(nullptr) {}
-}
-
+};
 class SyncQueue3{
     private:
     std::priority_queue<PatrTask, std::vector<PatrTask>, std::greater<PatrTask>> tasks;
@@ -42,7 +41,7 @@ class SyncQueue3{
     int Put(const PatrTask& task){
         return add(task);
     }
-    int Take(const PatrTask& task){
+    int Take(PatrTask& task){
         std::unique_lock<std::mutex> lock(mtx);
         m_not_empty.wait(lock, [this](){return !IsEmpty()||!is_running_;});
         if(!is_running_){

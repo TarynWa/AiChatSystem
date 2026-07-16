@@ -5,6 +5,7 @@
 #include<functional>
 #include<future>
 #include<atomic>
+#include <chrono>
 #include"SyncQueue1.hpp"
 int MaxTaskCount = 2;
 const int KeepAliveTime = 10;
@@ -87,7 +88,15 @@ class CacheThreadPool{
          if(m_queue_.put([task](){(*task)();})!=0){
             (*task)();
          }
+         if(m_idThreadSize <= 0 && m_curThreadSize < m_maxThreadSize){
+            std::lock_guard<std::mutex>loker(mutex_);
+            auto tha = std::make_shared<std::thread>(std::thread(&CacheThreadPool::RunInThread,this));
+            std::thread::id tid = tha->get_id();
+            m_threadgroup.emplace(tid,std::move(tha));
+            m_idThreadSize++;
+            m_curThreadSize++;
+         }
+         return result;
     }
-
 };
 #endif

@@ -3,6 +3,9 @@
 #include "SyncQueue.hpp"
 #include <thread>
 #include <functional>
+#include <atomic>
+#include <vector>
+#include <memory>
 using Task = std::function<void()>;
 class FixedThreadPool {
     private:

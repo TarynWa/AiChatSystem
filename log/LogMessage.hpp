@@ -1,7 +1,7 @@
 #ifndef LOG_MESSAGE_HPP
 #define LOG_MESSAGE_HPP
 #include <string>
-#include "TimeStamp.hpp"
+#include "Timestamp.hpp"
 #include "LogLevel.hpp"
 #include <iostream>
 #include <sstream>

@@ -1,0 +1,21 @@
+# 构建目录
+build/
+bin/
+*.o
+*.a
+*.so
+
+# IDE 配置
+.vscode/
+*.swp
+*.swo
+
+# 日志文件
+log/
+*.log
+
+# 编译产物
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake

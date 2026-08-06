@@ -15,4 +15,4 @@ target_include_directories(muduo_log
 
 target_compile_features(muduo_log PUBLIC cxx_std_17)
 
-add_library(log::muduo_log ALIAS muduo_log)
+add_library(lib::muduo_log ALIAS muduo_log)

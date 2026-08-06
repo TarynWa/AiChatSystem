@@ -7,4 +7,4 @@ target_include_directories(muduo_threadpool
 
 target_compile_features(muduo_threadpool INTERFACE cxx_std_17)
 
-add_library(threadpool::muduo_threadpool ALIAS muduo_threadpool)
+add_library(lib::muduo_threadpool ALIAS muduo_threadpool)

@@ -14,19 +14,19 @@
 using namespace muduo;
 using namespace muduo::net;
 using namespace std; 
-using MsgHandler=function<void(const TcpConnectionPtr& conn, string& str, Timestamp time)>;
+using MsgHandler=function<void(const TcpConnectionPtr& conn,const string& str, Timestamp time)>;
 class chatservice
 {
     public:
     static chatservice* instance();
-    void recvmsg(const TcpConnectionPtr& conn, chat::BaseMessage& js, Timestamp time);
+    void recvmsg(const TcpConnectionPtr& conn,const string& js, Timestamp time);
     //获取消息对应的处理器
     // MsgHandler getMsgHandler(int msgid);
     // void  sendResponse(const TcpConnectionPtr& conn, const json& js); 
     // //处理客户端异常退出
     // void clientCloseException(const TcpConnectionPtr& conn);
     // //处理登录业务
-    void login(const TcpConnectionPtr& conn, string& js, Timestamp time);
+    void login(const TcpConnectionPtr& conn,const string& js, Timestamp time);
     // //处理注册业务
     // void reg(const TcpConnectionPtr& conn, json& js, Timestamp time);
     // //一对一聊天业务

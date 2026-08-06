@@ -2,24 +2,24 @@
 #include <cstdint>
 
 
-uint64_t Timestamp::getmicro() const
+uint64_t Timestamp1::getmicro() const
 {
     return microSecondsSinceEpoch_;
 }
 
-uint64_t Timestamp::getsecond() const
+uint64_t Timestamp1::getsecond() const
 {
     return microSecondsSinceEpoch_ / KMicPerSec;
 }
 
-Timestamp::Timestamp(): microSecondsSinceEpoch_(0)
+Timestamp1::Timestamp1(): microSecondsSinceEpoch_(0)
 {
     microSecondsSinceEpoch_ = 0;
 }
 
-Timestamp::~Timestamp() = default;
+Timestamp1::~Timestamp1() = default;
 
-std::string Timestamp::toString() const
+std::string Timestamp1::toString() const
 {
     char buf[32] = {0};
     uint64_t microseconds = getmicro();
@@ -28,7 +28,7 @@ std::string Timestamp::toString() const
     return buf;
 }
 
-std::string Timestamp::toFormattedString(bool showmicro) const
+std::string Timestamp1::toFormattedString(bool showmicro) const
 {
     int64_t seconds = getsecond();
     int64_t microseconds = getmicro() % 1000000;
@@ -61,7 +61,7 @@ std::string Timestamp::toFormattedString(bool showmicro) const
     return std::string(buf);
 }
 
-std::string Timestamp::toFormattedFile() const
+std::string Timestamp1::toFormattedFile() const
 {
     const int slen = 64;
     char buff[slen] = {};
@@ -90,7 +90,7 @@ std::string Timestamp::toFormattedFile() const
     return std::string(buff);
 }
 
-Timestamp Timestamp::Now()
+Timestamp1 Timestamp1::Now()
 {
 #ifdef _WIN32
     // Windows 平台实现
@@ -103,11 +103,11 @@ Timestamp Timestamp::Now()
     struct timeval tv;
     ::gettimeofday(&tv, nullptr);
     int64_t microsec = static_cast<int64_t>(tv.tv_sec) * 1000000 + tv.tv_usec;
-    return Timestamp(microsec);
+    return Timestamp1(microsec);
 #endif
 }
 
-Timestamp Timestamp::Invalid()
+Timestamp1 Timestamp1::Invalid()
 {
-    return Timestamp();
+    return Timestamp1();
 }

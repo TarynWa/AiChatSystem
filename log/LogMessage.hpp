@@ -11,7 +11,7 @@ class LogMessage
     std::string text_;
     std::stringstream ss_;
 public:
-   LogMessage(Timestamp ts, int level, const char* msg, int line, const char* func){
+   LogMessage(Timestamp1 ts, int level, const char* msg, int line, const char* func){
      head_ = "[" + ts.toFormattedString(true) + "] [" + levelStr[level] + "] [" + func + ":" + std::to_string(line) + "] ";
     ss_ << msg << " ";
    }

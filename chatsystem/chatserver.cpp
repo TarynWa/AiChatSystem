@@ -4,11 +4,11 @@ void ChatServer::onConnection(const TcpConnectionPtr &conn)
 {
     if (conn->connected())
     {
-        printf("ChatServer - %s connected\n", conn->peerAddress().toIpPort().c_str());
+        LOG_INFO<<"ChatServer - "<<conn->peerAddress().toIpPort().c_str()<<" connected";
     }
     else
     {
-        printf("ChatServer - %s disconnected\n", conn->peerAddress().toIpPort().c_str());
+        LOG_INFO<<"ChatServer - "<<conn->peerAddress().toIpPort().c_str()<<" connected";
         // chatservice::instance()->clientCloseException(conn);
         conn->shutdown();
     }
@@ -17,19 +17,13 @@ void ChatServer::onConnection(const TcpConnectionPtr &conn)
 void ChatServer::onMessage(const TcpConnectionPtr &conn, Buffer *buffer, Timestamp time)
 {
     string buff = buffer->retrieveAllAsString();
-    printf("ChatServer received message:%s\n", buff.c_str());
+    LOG_INFO<<"ChatServer received message:"<<buff;
 
     // conn->send(buff);
     // threadpool_.run(std::bind(&ChatServer::doHeavyBusiness,this,conn,buff));
     // 业务处理模块
     try{
-    chat::BaseMessage menu;
-    bool success = menu.ParseFromString(buff);
-    if(!success){
-        std::cerr << "Deserialization failed!" << std::endl;
-        return ;
-    }
-    chatservice::instance()->recvmsg(conn,menu,time);
+    chatservice::instance()->recvmsg(conn,buff,time);
     }catch(const exception& e){
         //
         LOG_ERROR << "JSON parse error: " << e.what();

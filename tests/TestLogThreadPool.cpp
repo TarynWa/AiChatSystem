@@ -8,27 +8,27 @@
 // #include "FixedThreadPool.hpp"
 
 // int main() {
-//     namespace fs = std::filesystem;
-//     fs::create_directories("logmsg");
-//     std::ofstream logfile("logmsg/test_log.txt", std::ios::out | std::ios::app);
-//     auto outputFn = [&logfile](const std::string &msg) {
-//         if (logfile.is_open()) {
-//             logfile << msg;
-//         } else {
-//             std::cout << msg;
-//         }
-//     };
-//     auto flushFn = [&logfile]() {
-//         if (logfile.is_open()) {
-//             logfile.flush();
-//         } else {
-//             std::cout.flush();
-//         }
-//     };
+// namespace fs = std::filesystem;
+// fs::create_directories("logmsg");
+// std::ofstream logfile("logmsg/test_log.txt", std::ios::out | std::ios::app);
+// auto outputFn = [&logfile](const std::string &msg) {
+//     if (logfile.is_open()) {
+//         logfile << msg;
+//     } else {
+//         std::cout << msg;
+//     }
+// };
+// auto flushFn = [&logfile]() {
+//     if (logfile.is_open()) {
+//         logfile.flush();
+//     } else {
+//         std::cout.flush();
+//     }
+// };
 
-//     Logger::setOutput(outputFn);
-//     Logger::setFlush(flushFn);
-//     Logger::setLogLevel(INFO);
+// Logger::setOutput(outputFn);
+// Logger::setFlush(flushFn);
+// Logger::setLogLevel(INFO);
 
 //     LOG_INFO << "Starting log + threadpool test";
 
@@ -55,15 +55,52 @@
 //     return 0;
 // }
 
-#include"chatserver.hpp"
-int main(int argc , char*argv[]){
-    if(argc<3){
-         std::cerr<<"Usage: "<<argv[0]<<" <ip> <port>"<<std::endl;
+#include "chatserver.hpp"
+#include"LogFile.hpp"
+#include <fstream>
+#include <filesystem>
+#include "Logger.hpp"
+int main(int argc, char *argv[])
+{
+
+    namespace fs = std::filesystem;
+    fs::create_directories("logmsg");
+    std::ofstream logfile("logmsg/test_log1.txt", std::ios::out | std::ios::app);
+    auto outputFn = [&logfile](const std::string &msg)
+    {
+        if (logfile.is_open())
+        {
+            logfile << msg;
+        }
+        else
+        {
+            std::cout << msg;
+        }
+    };
+    auto flushFn = [&logfile]()
+    {
+        if (logfile.is_open())
+        {
+            logfile.flush();
+        }
+        else
+        {
+            std::cout.flush();
+        }
+    };
+
+    Logger1::setOutput(outputFn);
+    Logger1::setFlush(flushFn);
+    Logger1::setLogLevel(INFO);
+
+    if (argc < 3)
+    {
+        std::cerr << "Usage: " << argv[0] << " <ip> <port>" << std::endl;
         return 1;
     }
     EventLoop loop;
-    InetAddress addr(argv[1],atoi(argv[2]));
-    ChatServer server(&loop,addr,"Chatserver");
+    InetAddress addr(argv[1], atoi(argv[2]));
+    ChatServer server(&loop, addr, "Chatserver");
     server.start();
     loop.loop();
     return 0;

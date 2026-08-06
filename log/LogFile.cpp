@@ -28,7 +28,7 @@ void LogFile::append_unlocked(const char *logline, const int len)
     }
 }
 
-std::string LogFile::getLogFileName(const std::string &basename, const Timestamp &now)
+std::string LogFile::getLogFileName(const std::string &basename, const Timestamp1 &now)
 {
     std::string filename = basename;
         filename += ".";
@@ -44,7 +44,7 @@ LogFile::LogFile(const std::string &basename, size_t rollSize, bool threadSafe, 
   chechEventN_(checkEveryN),
   count_(0),
   mutex_(threadSafe ? new std::mutex : nullptr),
-  file_(new AppendFile(getLogFileName(baseName_, Timestamp::Now())))
+  file_(new AppendFile(getLogFileName(baseName_, Timestamp1::Now())))
 {
 }
 
@@ -82,7 +82,7 @@ void LogFile::flush()
 bool LogFile::rollFile()
 {
     time_t now = ::time(nullptr);
-    std::string filename = getLogFileName(baseName_, Timestamp::Now());
+    std::string filename = getLogFileName(baseName_, Timestamp1::Now());
     time_t start = now / kRollPerSecods_ * kRollPerSecods_;
     if (now > lastRoll_)
     {

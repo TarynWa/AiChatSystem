@@ -1,21 +1,21 @@
 #include "Logger.hpp"
 
-void Logger::setOutput(LogOutputFunc out)
+void Logger1::setOutput(LogOutputFunc out)
 {
     output_ = out;
 }
 
-void Logger::setFlush(FlushFunc flush)
+void Logger1::setFlush(FlushFunc flush)
 {
     flush_ = flush;
 }
 
-void Logger::setLogLevel(int level)
+void Logger1::setLogLevel(int level)
 {
     logLevel_ = level;
 }
 
-int Logger::GetLogLevel()
+int Logger1::GetLogLevel()
 {
     return logLevel_;
 }
@@ -31,6 +31,6 @@ void defaultFlush()
     // fflush(stdout);
 }
 
-Logger::LogOutputFunc Logger::output_ = defaultOutput;
-Logger::FlushFunc Logger::flush_ = defaultFlush;
-int Logger::logLevel_ = 1;
+Logger1::LogOutputFunc Logger1::output_ = defaultOutput;
+Logger1::FlushFunc Logger1::flush_ = defaultFlush;
+int Logger1::logLevel_ = 1;

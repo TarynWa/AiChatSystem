@@ -22,7 +22,7 @@ class LogFile
         // 不加锁的append方式
         void append_unlocked(const char *logline, const int len);
         // 获取日志文件的名称
-        static std::string getLogFileName(const std::string &basename, const Timestamp &now);
+        static std::string getLogFileName(const std::string &basename, const Timestamp1 &now);
 
     public:
         LogFile(const std::string &basename, // 日志文件basename

@@ -2,7 +2,7 @@
 #define LOGGER_HPP
 #include "LogMessage.hpp"
 #include <functional>
-class Logger
+class Logger1
 {
 private:
     LogMessage logMessage_;
@@ -13,13 +13,13 @@ public:
     static LogOutputFunc output_;
     static FlushFunc flush_;
     static int logLevel_ ;
-    Logger(int level, const char *file, int line, const char *func)
-        : logMessage_(Timestamp::Now(), level, "", line, func)
+    Logger1(int level, const char *file, int line, const char *func)
+        : logMessage_(Timestamp1::Now(), level, "", line, func)
     {
         // 这里不再需要给 logMessage_ 赋值了
         logLevel_ = level;
     }
-    ~Logger(){
+    ~Logger1(){
         logMessage_<<"\n";
         if (logMessage_.getmsg().empty()) {
             return;

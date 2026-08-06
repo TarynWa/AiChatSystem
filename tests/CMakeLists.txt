@@ -8,6 +8,7 @@ target_link_libraries(log_threadpool_test
         muduo_net
         muduo_base
         pthread
+        protobuf
 )
 
 add_test(NAME LogThreadPoolTest COMMAND log_threadpool_test)

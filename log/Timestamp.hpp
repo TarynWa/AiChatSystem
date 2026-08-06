@@ -10,15 +10,15 @@
 #include <sys/time.h>
 #endif
 #include <memory>
-class Timestamp
+class Timestamp1
 {
 private:
     uint64_t microSecondsSinceEpoch_ = 0;
     static const uint32_t KMicPerSec = 1000 * 1000;
 
 public:
-    Timestamp();
-    ~Timestamp();
+    Timestamp1();
+    ~Timestamp1();
     uint64_t getmicro() const;
     uint64_t getsecond() const;
     std::string toString() const;
@@ -27,9 +27,9 @@ public:
     //"2025/10/11 15:29:23"
     //"2025/10/11 15:29:23.32z"
     std::string toFormattedFile() const;
-    static Timestamp Now(); // 现在时间
-    static Timestamp Invalid();
-    Timestamp(uint64_t ms) : microSecondsSinceEpoch_(ms) {
+    static Timestamp1 Now(); // 现在时间
+    static Timestamp1 Invalid();
+    Timestamp1(uint64_t ms) : microSecondsSinceEpoch_(ms) {
         // impl_->microSecondsSinceEpoch_ = ms;
         // impl_->vm_handle_ = this;
     }

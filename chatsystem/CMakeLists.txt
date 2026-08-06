@@ -1,6 +1,7 @@
 set(CHAT_SOURCES
    chatserver.cpp
-#    chatservice.cpp
+   chatservice.cpp
+   chat.pb.cc
 )
 
 add_library(muduo_chat STATIC ${CHAT_SOURCES})

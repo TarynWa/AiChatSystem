@@ -7,6 +7,8 @@
 #include<functional>
 #include<string>
 #include<iostream>
+#include"chatservice.hpp"
+#include"chat.pb.h"
 // #include"chatservice.hpp"
 using namespace muduo;
 using namespace muduo::net;

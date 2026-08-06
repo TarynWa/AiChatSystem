@@ -17,17 +17,23 @@ void ChatServer::onConnection(const TcpConnectionPtr &conn)
 void ChatServer::onMessage(const TcpConnectionPtr &conn, Buffer *buffer, Timestamp time)
 {
     string buff = buffer->retrieveAllAsString();
-    // printf("ChatServer received message:%s\n", buff.c_str());
+    printf("ChatServer received message:%s\n", buff.c_str());
+
     // conn->send(buff);
     // threadpool_.run(std::bind(&ChatServer::doHeavyBusiness,this,conn,buff));
     // 业务处理模块
-    // try{
-    // json js = json::parse(buff);
-    // chatservice::instance()->recvmsg(conn, js, time);
-    // }catch(const exception& e){
-    //     //
-    //     LOG_ERROR << "JSON parse error: " << e.what();
-    // }
+    try{
+    chat::BaseMessage menu;
+    bool success = menu.ParseFromString(buff);
+    if(!success){
+        std::cerr << "Deserialization failed!" << std::endl;
+        return ;
+    }
+    chatservice::instance()->recvmsg(conn,menu,time);
+    }catch(const exception& e){
+        //
+        LOG_ERROR << "JSON parse error: " << e.what();
+    }
     //int id = js["msgid"].get<int>();
     // auto msgHandler=chatservice::instance()->getMsgHandler(id);
     // msgHandler(conn,js,time);

@@ -1,36 +1,29 @@
-// #include <iostream>
-// #include <fstream>
-// #include <filesystem>
-// #include <atomic>
-// #include <thread>
-// #include <chrono>
-// #include "Logger.hpp"
-// #include "FixedThreadPool.hpp"
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <atomic>
+#include <thread>
+#include <chrono>
+#include "AsyncLogging.hpp"
+#include "FixedThreadPool.hpp"
+
+wangt::AsyncLogging *asynclog = new wangt::AsyncLogging("/home/wangt/ThreadPoolAction/logmsg/chat", 1024 * 10);
+void asyncWriteFile(const string &info)
+{
+    asynclog->append(info);
+}
+void asyncFlushFile()
+{
+    asynclog->flush();
+}
 
 // int main() {
-// namespace fs = std::filesystem;
-// fs::create_directories("logmsg");
-// std::ofstream logfile("logmsg/test_log.txt", std::ios::out | std::ios::app);
-// auto outputFn = [&logfile](const std::string &msg) {
-//     if (logfile.is_open()) {
-//         logfile << msg;
-//     } else {
-//         std::cout << msg;
-//     }
-// };
-// auto flushFn = [&logfile]() {
-//     if (logfile.is_open()) {
-//         logfile.flush();
-//     } else {
-//         std::cout.flush();
-//     }
-// };
 
-// Logger::setOutput(outputFn);
-// Logger::setFlush(flushFn);
-// Logger::setLogLevel(INFO);
+// wangt::Logger::setOutput(asyncWriteFile);
+// wangt::Logger::setFlush(asyncFlushFile);
+// wangt::Logger::setLogLevel(wangt::LOG_LEVEL::INFO);
 
-//     LOG_INFO << "Starting log + threadpool test";
+//     WT_LOG_INFO << "Starting log + threadpool test";
 
 //     FixedThreadPool pool(2, 10);
 //     std::atomic<int> counter{0};
@@ -38,7 +31,7 @@
 
 //     for (int i = 0; i < taskCount; ++i) {
 //         pool.addTask([i, &counter]() {
-//             LOG_INFO << "Task " << i << " running";
+//            WT_LOG_INFO << "Task " << i << " running";
 //             counter.fetch_add(1, std::memory_order_relaxed);
 //         });
 //     }
@@ -47,61 +40,10 @@
 //     pool.stop();
 
 //     if (counter.load(std::memory_order_relaxed) != taskCount) {
-//         std::cerr << "Task execution failed, counter = " << counter << std::endl;
+//         WT_LOG_INFO << "Task execution failed, counter = " << counter;
 //         return 1;
 //     }
 
-//     LOG_INFO << "All tasks completed, counter = " << counter;
+//     WT_LOG_INFO << "All tasks completed, counter = " << counter;
 //     return 0;
 // }
-
-#include "chatserver.hpp"
-#include"LogFile.hpp"
-#include <fstream>
-#include <filesystem>
-#include "Logger.hpp"
-int main(int argc, char *argv[])
-{
-
-    namespace fs = std::filesystem;
-    fs::create_directories("logmsg");
-    std::ofstream logfile("logmsg/test_log1.txt", std::ios::out | std::ios::app);
-    auto outputFn = [&logfile](const std::string &msg)
-    {
-        if (logfile.is_open())
-        {
-            logfile << msg;
-        }
-        else
-        {
-            std::cout << msg;
-        }
-    };
-    auto flushFn = [&logfile]()
-    {
-        if (logfile.is_open())
-        {
-            logfile.flush();
-        }
-        else
-        {
-            std::cout.flush();
-        }
-    };
-
-    Logger1::setOutput(outputFn);
-    Logger1::setFlush(flushFn);
-    Logger1::setLogLevel(INFO);
-
-    if (argc < 3)
-    {
-        std::cerr << "Usage: " << argv[0] << " <ip> <port>" << std::endl;
-        return 1;
-    }
-    EventLoop loop;
-    InetAddress addr(argv[1], atoi(argv[2]));
-    ChatServer server(&loop, addr, "Chatserver");
-    server.start();
-    loop.loop();
-    return 0;
-}

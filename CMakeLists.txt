@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 enable_testing()
 
-add_subdirectory(log)
+add_subdirectory(LogSystem)
 add_subdirectory(threadpool)
 add_subdirectory(chatsystem)
 add_subdirectory(tests)

@@ -8,8 +8,8 @@ void ChatServer::onConnection(const TcpConnectionPtr &conn)
     }
     else
     {
-        WT_LOG_INFO<<"ChatServer - "<<conn->peerAddress().toIpPort().c_str()<<" connected";
-        // chatservice::instance()->clientCloseException(conn);
+        WT_LOG_INFO<<"ChatServer - "<<conn->peerAddress().toIpPort().c_str()<<" disconnected";
+        chatservice::instance()->clientCloseException(conn);
         conn->shutdown();
     }
 }

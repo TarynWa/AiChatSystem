@@ -6,6 +6,7 @@
 #include <chrono>
 #include"AsyncLogging.hpp"
 #include "chatserver.hpp"
+#include "chatservice.hpp"
 namespace fs = std::filesystem;
 wangt::AsyncLogging *asynclog = nullptr;
 void asyncWriteFile(const string &info)
@@ -34,6 +35,10 @@ int main(int argc, char *argv[])
     }
     EventLoop loop;
     InetAddress addr(argv[1], atoi(argv[2]));
+
+    // 初始化Redis连接并启动SUBSCRIBE线程（集群跨节点消息同步）
+    chatservice::instance()->initRedis();
+
     ChatServer server(&loop, addr, "ChatServer");
     server.start();
     loop.loop();

@@ -1,40 +1,306 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <atomic>
 #include <thread>
 #include <chrono>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/select.h>
 #include <netinet/in.h>
-#include <ctime>
 #include <arpa/inet.h>
-#include "AsyncLogging.hpp"
 #include <cstring>
+#include <string>
+#include <vector>
+#include "AsyncLogging.hpp"
 #include "chat.pb.h"
+
 namespace fs = std::filesystem;
 wangt::AsyncLogging *asynclog = nullptr;
-void asyncWriteFile(const string &info)
+void asyncWriteFile(const string &info) { asynclog->append(info); }
+void asyncFlushFile() { asynclog->flush(); }
+
+// 测试结果记录
+struct TestResult
 {
-    asynclog->append(info);
-}
-void asyncFlushFile()
+    string name;
+    bool passed;
+};
+
+// ---------- 通信辅助函数 ----------
+
+// 连接到服务器
+int connectToServer(const string &ip, int port)
 {
-    asynclog->flush();
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) return -1;
+    struct sockaddr_in servaddr;
+    memset(&servaddr, 0, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(port);
+    inet_pton(AF_INET, ip.c_str(), &servaddr.sin_addr);
+    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1)
+    {
+        close(sockfd);
+        return -1;
+    }
+    return sockfd;
 }
+
+// 发送一条 BaseMessage 并接收服务端响应
+bool sendAndRecv(int sockfd, const chat::BaseMessage &msg, chat::BaseMessage &response, int timeout_sec = 5)
+{
+    string buf;
+    if (!msg.SerializeToString(&buf)) return false;
+    int n = send(sockfd, buf.data(), buf.size(), MSG_NOSIGNAL);
+    if (n < 0) return false;
+
+    fd_set readfds;
+    struct timeval tv;
+    tv.tv_sec = timeout_sec;
+    tv.tv_usec = 0;
+    FD_ZERO(&readfds);
+    FD_SET(sockfd, &readfds);
+    int rv = select(sockfd + 1, &readfds, nullptr, nullptr, &tv);
+    if (rv <= 0) return false;
+
+    char rbuf[8192] = {0};
+    n = recv(sockfd, rbuf, sizeof(rbuf), 0);
+    if (n <= 0) return false;
+    return response.ParseFromArray(rbuf, n);
+}
+
+// 尝试接收额外消息（用于接收离线消息投递），无消息则超时返回false
+bool recvOptional(int sockfd, chat::BaseMessage &response, int timeout_sec = 2)
+{
+    fd_set readfds;
+    struct timeval tv;
+    tv.tv_sec = timeout_sec;
+    tv.tv_usec = 0;
+    FD_ZERO(&readfds);
+    FD_SET(sockfd, &readfds);
+    int rv = select(sockfd + 1, &readfds, nullptr, nullptr, &tv);
+    if (rv <= 0) return false;
+    char rbuf[8192] = {0};
+    int n = recv(sockfd, rbuf, sizeof(rbuf), 0);
+    if (n <= 0) return false;
+    return response.ParseFromArray(rbuf, n);
+}
+
+// 构造并发送指定类型的消息
+bool sendType(int sockfd, chat::EnMsgType type, const google::protobuf::Message &payload, chat::BaseMessage &response)
+{
+    chat::BaseMessage msg;
+    msg.set_type(type);
+    msg.set_payload(payload.SerializeAsString());
+    return sendAndRecv(sockfd, msg, response);
+}
+
+// ---------- 测试用例 ----------
+
+// 测试1：注册新用户
+bool testRegister(int sockfd, const string &username, const string &password, int64_t &outUserId)
+{
+    WT_LOG_INFO << "===== [TEST] 注册用户: " << username << " =====";
+    chat::RegisterRequest req;
+    req.set_username(username);
+    req.set_password(password);
+    req.set_id(0);
+
+    chat::BaseMessage response;
+    if (!sendType(sockfd, chat::REG_MSG, req, response)) return false;
+    if (response.type() != chat::REG_MSG_ACK) return false;
+
+    chat::RegisterResponse ack;
+    if (!ack.ParseFromString(response.payload())) return false;
+
+    WT_LOG_INFO << "注册响应: code=" << ack.code() << " id=" << ack.id();
+    if (ack.code() != 0) return false;
+    outUserId = ack.id();
+    return true;
+}
+
+// 测试2：登录
+bool testLogin(int sockfd, const string &username, const string &password, int64_t expectedId)
+{
+    WT_LOG_INFO << "===== [TEST] 登录: " << username << " (id=" << expectedId << ") =====";
+    chat::LoginRequest req;
+    req.set_username(username);
+    req.set_password(password);
+    req.set_id(expectedId);
+
+    chat::BaseMessage response;
+    if (!sendType(sockfd, chat::LOGIN_MSG, req, response)) return false;
+    if (response.type() != chat::LOGIN_MSG_ACK) return false;
+
+    chat::LoginRequest ack;
+    if (!ack.ParseFromString(response.payload())) return false;
+    WT_LOG_INFO << "登录响应: id=" << ack.id();
+    return ack.id() == expectedId;
+}
+
+// 测试3：添加好友
+bool testAddFriend(int sockfd, int fromId, int toId)
+{
+    WT_LOG_INFO << "===== [TEST] 添加好友: " << fromId << " -> " << toId << " =====";
+    chat::AddFriendRequest req;
+    req.set_from_id(fromId);
+    req.set_to_id(toId);
+
+    chat::BaseMessage response;
+    if (!sendType(sockfd, chat::ADD_FRIEND_MSG, req, response)) return false;
+    if (response.type() != chat::ADD_FRIEND_MSG_ACK) return false;
+
+    chat::AddFriendAck ack;
+    ack.ParseFromString(response.payload());
+    WT_LOG_INFO << "添加好友响应: code=" << ack.code() << " msg=" << ack.msg();
+    return ack.code() == 0;
+}
+
+// 测试4：删除好友
+bool testDelFriend(int sockfd, int fromId, int toId)
+{
+    WT_LOG_INFO << "===== [TEST] 删除好友: " << fromId << " -> " << toId << " =====";
+    chat::DelFriendRequest req;
+    req.set_from_id(fromId);
+    req.set_to_id(toId);
+
+    chat::BaseMessage response;
+    if (!sendType(sockfd, chat::DEL_FRIEND_MSG, req, response)) return false;
+    if (response.type() != chat::DEL_FRIEND_MSG_ACK) return false;
+
+    chat::DelFriendAck ack;
+    ack.ParseFromString(response.payload());
+    WT_LOG_INFO << "删除好友响应: code=" << ack.code() << " msg=" << ack.msg();
+    return ack.code() == 0;
+}
+
+// 测试5：创建群组
+bool testCreateGroup(int sockfd, int creatorId, const string &name, const string &desc, int64_t &outGroupId)
+{
+    WT_LOG_INFO << "===== [TEST] 创建群组: " << name << " =====";
+    chat::CreateGroupRequest req;
+    req.set_creator_id(creatorId);
+    req.set_group_name(name);
+    req.set_group_desc(desc);
+
+    chat::BaseMessage response;
+    if (!sendType(sockfd, chat::CREATE_GROUP_MSG, req, response)) return false;
+    if (response.type() != chat::CREATE_GROUP_MSG_ACK) return false;
+
+    chat::CreateGroupAck ack;
+    ack.ParseFromString(response.payload());
+    WT_LOG_INFO << "创建群组响应: code=" << ack.code() << " group_id=" << ack.group_id();
+    if (ack.code() != 0) return false;
+    outGroupId = ack.group_id();
+    return true;
+}
+
+// 测试6：加入群组
+bool testAddGroup(int sockfd, int userId, int groupId)
+{
+    WT_LOG_INFO << "===== [TEST] 加入群组: user=" << userId << " group=" << groupId << " =====";
+    chat::AddGroupRequest req;
+    req.set_user_id(userId);
+    req.set_group_id(groupId);
+
+    chat::BaseMessage response;
+    if (!sendType(sockfd, chat::ADD_GROUP_MSG, req, response)) return false;
+    if (response.type() != chat::ADD_GROUP_MSG_ACK) return false;
+
+    chat::AddGroupAck ack;
+    ack.ParseFromString(response.payload());
+    WT_LOG_INFO << "加入群组响应: code=" << ack.code() << " msg=" << ack.msg();
+    return ack.code() == 0;
+}
+
+// 测试7：一对一私聊（离线存储）
+bool testOneChat(int sockfd, int fromId, int toId, const string &content)
+{
+    WT_LOG_INFO << "===== [TEST] 私聊: " << fromId << " -> " << toId << " =====";
+    chat::OneChatRequest req;
+    req.set_from_id(fromId);
+    req.set_to_id(toId);
+    req.set_content(content);
+
+    chat::BaseMessage response;
+    if (!sendType(sockfd, chat::ONE_CHAT_MSG, req, response)) return false;
+    if (response.type() != chat::ONE_CHAT_MSG_ACK) return false;
+
+    chat::OneChatAck ack;
+    ack.ParseFromString(response.payload());
+    WT_LOG_INFO << "私聊响应: code=" << ack.code() << " msg=" << ack.msg();
+    return ack.code() == 0;
+}
+
+// 测试8：群聊
+bool testGroupChat(int sockfd, int fromId, int groupId, const string &content)
+{
+    WT_LOG_INFO << "===== [TEST] 群聊: from=" << fromId << " group=" << groupId << " =====";
+    chat::GroupChatRequest req;
+    req.set_from_id(fromId);
+    req.set_group_id(groupId);
+    req.set_content(content);
+
+    chat::BaseMessage response;
+    if (!sendType(sockfd, chat::GROUP_CHAT_MSG, req, response)) return false;
+    if (response.type() != chat::GROUP_CHAT_MSG_ACK) return false;
+
+    chat::GroupChatAck ack;
+    ack.ParseFromString(response.payload());
+    WT_LOG_INFO << "群聊响应: code=" << ack.code() << " msg=" << ack.msg();
+    return ack.code() == 0;
+}
+
+// 测试9：注销（loginOut不发送ACK，只需send成功）
+bool testLoginOut(int sockfd, int userId)
+{
+    WT_LOG_INFO << "===== [TEST] 注销: user=" << userId << " =====";
+    chat::LoginRequest req;
+    req.set_id(userId);
+
+    // loginOut handler不回送ACK，构造消息后直接send即可
+    chat::BaseMessage msg;
+    msg.set_type(chat::LOGINOUT_MSG);
+    msg.set_payload(req.SerializeAsString());
+    string buf;
+    msg.SerializeToString(&buf);
+    int n = send(sockfd, buf.data(), buf.size(), MSG_NOSIGNAL);
+    WT_LOG_INFO << "注销请求已发送, bytes=" << n;
+    return n > 0;
+}
+
+// 测试10：登录后接收离线消息
+// 注意：由于协议无消息分帧，多条离线消息可能合并在一个TCP段中，
+// ParseFromArray只能解析第一条。此处验证"至少收到1条"即表示离线投递功能正常。
+bool testReceiveOfflineMsgs(int sockfd, int minExpected)
+{
+    WT_LOG_INFO << "===== [TEST] 接收离线消息, 期望至少 " << minExpected << " 条 =====";
+    // 等待服务端异步投递离线消息（threadpool异步发送，需短暂等待）
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    int received = 0;
+    chat::BaseMessage msg;
+    while (recvOptional(sockfd, msg, 2))
+    {
+        received++;
+        WT_LOG_INFO << "收到离线消息 type=" << msg.type();
+    }
+    WT_LOG_INFO << "共收到 " << received << " 条离线消息";
+    return received >= minExpected;
+}
+
+// ---------- 主函数 ----------
 
 int main(int argc, char *argv[])
 {
+    // 异步日志初始化
     string path = "/home/wangt/ThreadPoolAction/logmsg/cli";
-    if (!fs::exists(path))
-    {
-        fs::create_directories(path);
-    }
-    asynclog = new wangt::AsyncLogging("/home/wangt/ThreadPoolAction/logmsg/cli/client", 1024 * 10);
+    if (!fs::exists(path)) fs::create_directories(path);
+    asynclog = new wangt::AsyncLogging(path + "/client", 1024 * 10);
     asynclog->start();
     wangt::Logger::setOutput(asyncWriteFile);
     wangt::Logger::setFlush(asyncFlushFile);
+
     if (argc < 3)
     {
         WT_LOG_ERROR << "Usage: " << argv[0] << " <ip> <port>";
@@ -42,64 +308,103 @@ int main(int argc, char *argv[])
     }
     string ip = argv[1];
     int port = atoi(argv[2]);
-    int cilsockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (cilsockfd == -1)
-    {
-        WT_LOG_ERROR << "create socket failed";
-        return -1;
-    }
-    struct sockaddr_in servaddr;
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(port);
-    inet_pton(AF_INET, ip.c_str(), &servaddr.sin_addr);
-    if (connect(cilsockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1)
-    {
-        WT_LOG_ERROR << "connect server failed";
-        return -1;
-    }
 
-    chat::BaseMessage login;
-    // login.set_type(chat::LOGIN_MSG);
-    // chat::LoginRequest loginRequest;
-    // loginRequest.set_username("testuser");
-    // loginRequest.set_password("testpassword");
-    // loginRequest.set_id(1);
-    // login.set_payload(loginRequest.SerializeAsString());
-    login.set_type(chat::REG_MSG);
-    chat::RegisterRequest registerRequest;
-    registerRequest.set_username("testuser");
-    registerRequest.set_password("testpassword");
-    registerRequest.set_id(1);
-    login.set_payload(registerRequest.SerializeAsString());
-    string buf;
-    if (!login.SerializeToString(&buf))
-    {
-        WT_LOG_ERROR << "Failed to serialize login message";
-        close(cilsockfd);
-        return -1;
-    }
+    // 连接A（用户A的操作）
+    int connA = connectToServer(ip, port);
+    if (connA < 0) { WT_LOG_ERROR << "connect A failed"; return -1; }
+    WT_LOG_INFO << "Connected A to " << ip << ":" << port;
 
-    WT_LOG_INFO << "Login message serialized, size: " << buf.size();
-    uint32_t bodyLen = htonl(static_cast<uint32_t>(buf.size()));
-        // 发送数据
-        int n = send(cilsockfd, buf.data(), buf.size(), MSG_NOSIGNAL);
-        if (n == -1)
+    string pid = to_string(getpid());
+    string userA = "userA_" + pid;
+    string userB = "userB_" + pid;
+    string pwd = "password123";
+    int64_t idA = -1, idB = -1, groupId = -1;
+
+    vector<TestResult> results;
+
+    // 1. 注册用户A和B
+    results.push_back({"注册用户A", testRegister(connA, userA, pwd, idA)});
+    WT_LOG_INFO << "userA id=" << idA;
+    results.push_back({"注册用户B", testRegister(connA, userB, pwd, idB)});
+    WT_LOG_INFO << "userB id=" << idB;
+
+    if (idA <= 0 || idB <= 0)
+    {
+        WT_LOG_ERROR << "注册失败，无法继续测试";
+        results.push_back({"后续测试", false});
+    }
+    else
+    {
+        // 2. 登录用户A
+        results.push_back({"登录用户A", testLogin(connA, userA, pwd, idA)});
+
+        // 3. 添加好友 A->B
+        results.push_back({"添加好友", testAddFriend(connA, idA, idB)});
+
+        // 4. 删除好友 A->B
+        results.push_back({"删除好友", testDelFriend(connA, idA, idB)});
+
+        // 5. 创建群组
+        results.push_back({"创建群组", testCreateGroup(connA, idA, "test_group_" + pid, "test desc", groupId)});
+        WT_LOG_INFO << "group id=" << groupId;
+
+        if (groupId > 0)
         {
-            WT_LOG_ERROR << "send login message failed: " << strerror(errno);
-            close(cilsockfd);
-            return -1;
+            // 6. 用户B加入群组
+            results.push_back({"加入群组", testAddGroup(connA, idB, groupId)});
+
+            // 7. 私聊 A->B（B离线，应存储离线消息）
+            results.push_back({"私聊(离线存储)", testOneChat(connA, idA, idB, "Hello B, this is offline msg")});
+
+            // 8. 群聊 A->group（B离线，应存储离线消息）
+            results.push_back({"群聊(离线存储)", testGroupChat(connA, idA, groupId, "Group hello from A")});
         }
-        WT_LOG_INFO << "Sent " << n << " bytes";
-        
-        // n = recv(cilsockfd, buf.data(), buf.size(), 0);
-        // if (n == -1)
-        // {
-        //     WT_LOG_ERROR << "recv failed: " << strerror(errno);
-        //     close(cilsockfd);
-        //     return -1;
-        // }
-        // WT_LOG_INFO << "Received " << n << " bytes";
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
-    while(1);
+        else
+        {
+            results.push_back({"加入群组", false});
+            results.push_back({"私聊(离线存储)", false});
+            results.push_back({"群聊(离线存储)", false});
+        }
+
+        // 9. 注销用户A
+        results.push_back({"注销用户A", testLoginOut(connA, idA)});
+    }
+
+    close(connA);
+
+    // 10. 用户B登录，接收离线消息
+    if (idB > 0)
+    {
+        int connB = connectToServer(ip, port);
+        if (connB >= 0)
+        {
+            results.push_back({"登录用户B", testLogin(connB, userB, pwd, idB)});
+            // 登录后应收到离线消息（私聊+群聊，但可能合并在一个TCP段中）
+            results.push_back({"接收离线消息", testReceiveOfflineMsgs(connB, 1)});
+            close(connB);
+        }
+        else
+        {
+            results.push_back({"登录用户B", false});
+            results.push_back({"接收离线消息", false});
+        }
+    }
+
+    // 汇总测试结果
+    int passCount = 0;
+    cout << "\n============================================================" << endl;
+    cout << " 测试结果汇总" << endl;
+    cout << "============================================================" << endl;
+    for (const auto &r : results)
+    {
+        cout << "  " << (r.passed ? "[PASS]" : "[FAIL]") << "  " << r.name << endl;
+        if (r.passed) ++passCount;
+    }
+    cout << "============================================================" << endl;
+    cout << " 通过: " << passCount << "/" << results.size() << endl;
+    cout << "============================================================" << endl;
+
+    asynclog->stop();
+    delete asynclog;
+    return passCount == results.size() ? 0 : 1;
 }

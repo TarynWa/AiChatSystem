@@ -1,41 +1,146 @@
 syntax = "proto3";
 package chat;
 
-//定义主界面列表
-
-enum EnMsgType{
-    LOGIN_MSG = 0; // 登录消息
-    LOGIN_MSG_ACK =1; // 登录响应消息
-    LOGINOUT_MSG=2; // 注销消息
-    REG_MSG=3; // 注册消息
-    REG_MSG_ACK=4; // 注册响应消息
-    ONE_CHAT_MSG=5; // 聊天消息
-    ADD_FRIEND_MSG=6; // 添加好友消息
-
-    CREATE_GROUP_MSG=7; // 创建群组
-    ADD_GROUP_MSG=8; // 加入群组
-    GROUP_CHAT_MSG=9; // 群聊天
+// 主消息类型枚举
+// proto3规范：enum首项必须为0，此处使用MSG_NONE作为占位/未知类型
+// 后续业务枚举值递增分配，新增业务请按既定规律追加，禁止复用历史值
+enum EnMsgType {
+    MSG_NONE = 0;              // 占位/未知消息，proto3首项必须为0
+    LOGIN_MSG = 1;             // 登录请求
+    LOGIN_MSG_ACK = 2;         // 登录响应
+    LOGINOUT_MSG = 3;          // 注销消息
+    REG_MSG = 4;               // 注册请求
+    REG_MSG_ACK = 5;           // 注册响应
+    ONE_CHAT_MSG = 6;          // 一对一私聊
+    ONE_CHAT_MSG_ACK = 7;      // 一对一私聊回执
+    ADD_FRIEND_MSG = 8;        // 添加好友
+    ADD_FRIEND_MSG_ACK = 9;    // 添加好友响应
+    DEL_FRIEND_MSG = 10;       // 删除好友
+    DEL_FRIEND_MSG_ACK = 11;   // 删除好友响应
+    CREATE_GROUP_MSG = 12;     // 创建群组
+    CREATE_GROUP_MSG_ACK = 13; // 创建群组响应
+    ADD_GROUP_MSG = 14;        // 加入群组
+    ADD_GROUP_MSG_ACK = 15;    // 加入群组响应
+    QUIT_GROUP_MSG = 16;       // 退出群组
+    QUIT_GROUP_MSG_ACK = 17;   // 退出群组响应
+    GROUP_CHAT_MSG = 18;       // 群聊天
+    GROUP_CHAT_MSG_ACK = 19;   // 群聊天回执
+    CROSS_NODE_CHAT_MSG = 20;  // 跨节点消息转发（Redis Pub/Sub传输载体）
 }
 
-message BaseMessage{
-    EnMsgType type =1;
+// 通信外层信封
+// type标识业务类型，payload承载具体业务消息序列化字节
+message BaseMessage {
+    EnMsgType type = 1;
     bytes payload = 2;
 }
 
-// 登录请求消息
+// 登录请求消息（既有，保持字段兼容）
 message LoginRequest {
     string username = 1;
     string password = 2;
-    int64 id =3;
+    int64 id = 3;
 }
 
+// 注册请求消息（既有，保持字段兼容；id字段由服务端分配，客户端传入将被忽略）
 message RegisterRequest {
     string username = 1;
     string password = 2;
-    int64 id =3;
+    int64 id = 3;
 }
 
+// 注册响应消息
+// code错误码体系：0成功，1参数非法，2用户名已存在，3数据库写入失败
 message RegisterResponse {
+    int64 code = 1;             // 错误码
+    string msg = 2;             // 描述信息
+    int64 id = 3;               // 注册成功后服务端分配的用户ID（失败时为-1）
+}
+
+// ========== 一对一私聊 ==========
+message OneChatRequest {
+    int64 from_id = 1;          // 发送方用户ID
+    int64 to_id = 2;            // 接收方用户ID
+    string content = 3;         // 消息内容
+    int64 timestamp = 4;        // 消息时间戳（毫秒）
+}
+
+message OneChatAck {
     int64 code = 1;
     string msg = 2;
+}
+
+// ========== 好友管理 ==========
+message AddFriendRequest {
+    int64 from_id = 1;          // 发起方用户ID
+    int64 to_id = 2;            // 被添加好友ID
+}
+
+message AddFriendAck {
+    int64 code = 1;
+    string msg = 2;
+}
+
+message DelFriendRequest {
+    int64 from_id = 1;
+    int64 to_id = 2;
+}
+
+message DelFriendAck {
+    int64 code = 1;
+    string msg = 2;
+}
+
+// ========== 群组管理 ==========
+message CreateGroupRequest {
+    int64 creator_id = 1;       // 创建者用户ID
+    string group_name = 2;      // 群名称
+    string group_desc = 3;      // 群描述
+}
+
+message CreateGroupAck {
+    int64 code = 1;
+    string msg = 2;
+    int64 group_id = 3;         // 创建成功后服务端分配的群ID
+}
+
+message AddGroupRequest {
+    int64 user_id = 1;
+    int64 group_id = 2;
+}
+
+message AddGroupAck {
+    int64 code = 1;
+    string msg = 2;
+}
+
+message QuitGroupRequest {
+    int64 user_id = 1;
+    int64 group_id = 2;
+}
+
+message QuitGroupAck {
+    int64 code = 1;
+    string msg = 2;
+}
+
+message GroupChatRequest {
+    int64 from_id = 1;
+    int64 group_id = 2;
+    string content = 3;
+    int64 timestamp = 4;
+}
+
+message GroupChatAck {
+    int64 code = 1;
+    string msg = 2;
+}
+
+// ========== 跨节点消息转发 ==========
+// Redis Pub/Sub传输载体，承载原始消息在节点间转发
+// 接收节点解析后查找target_user_id是否在本地_userConnMap中，命中则转发
+message CrossNodeMsg {
+    int64 target_user_id = 1;   // 目标用户ID（接收节点在本地_userConnMap中查找）
+    int32 msg_type = 2;          // 原始消息类型（ONE_CHAT_MSG / GROUP_CHAT_MSG）
+    string payload = 3;         // 原始消息序列化字节
 }

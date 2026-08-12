@@ -40,6 +40,7 @@ void ChatServer::onMessage(const TcpConnectionPtr &conn, Buffer *buffer, Timesta
 
 ChatServer::ChatServer(EventLoop *loop, const InetAddress &listenAddr, const string &nameArg) : loop_(loop), server_(loop, listenAddr, nameArg)
 {
+    WT_LOG_INFO << "ChatServer constructor called";
     server_.setConnectionCallback(
         std::bind(&ChatServer::onConnection, this, _1));
     server_.setMessageCallback(

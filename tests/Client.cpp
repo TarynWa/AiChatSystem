@@ -13,8 +13,8 @@
 #include "AsyncLogging.hpp"
 #include <cstring>
 #include "chat.pb.h"
-
-wangt::AsyncLogging *asynclog = new wangt::AsyncLogging("/home/wangt/ThreadPoolAction/logmsg/cli/client", 1024 * 10);
+namespace fs = std::filesystem;
+wangt::AsyncLogging *asynclog = nullptr;
 void asyncWriteFile(const string &info)
 {
     asynclog->append(info);
@@ -24,18 +24,15 @@ void asyncFlushFile()
     asynclog->flush();
 }
 
-static bool sendAll(int fd, const char *data, size_t len) {
-    size_t sent = 0;
-    while (sent < len) {
-        ssize_t n = send(fd, data + sent, len - sent, MSG_NOSIGNAL);
-        if (n <= 0) return false;
-        sent += n;
-    }
-    return true;
-}
-
 int main(int argc, char *argv[])
 {
+    string path = "/home/wangt/ThreadPoolAction/logmsg/cli";
+    if (!fs::exists(path))
+    {
+        fs::create_directories(path);
+    }
+    asynclog = new wangt::AsyncLogging("/home/wangt/ThreadPoolAction/logmsg/cli/client", 1024 * 10);
+    asynclog->start();
     wangt::Logger::setOutput(asyncWriteFile);
     wangt::Logger::setFlush(asyncFlushFile);
     if (argc < 3)
@@ -63,8 +60,18 @@ int main(int argc, char *argv[])
     }
 
     chat::BaseMessage login;
-    login.set_type(chat::LOGIN_MSG);
-    login.set_payload("hello");
+    // login.set_type(chat::LOGIN_MSG);
+    // chat::LoginRequest loginRequest;
+    // loginRequest.set_username("testuser");
+    // loginRequest.set_password("testpassword");
+    // loginRequest.set_id(1);
+    // login.set_payload(loginRequest.SerializeAsString());
+    login.set_type(chat::REG_MSG);
+    chat::RegisterRequest registerRequest;
+    registerRequest.set_username("testuser");
+    registerRequest.set_password("testpassword");
+    registerRequest.set_id(1);
+    login.set_payload(registerRequest.SerializeAsString());
     string buf;
     if (!login.SerializeToString(&buf))
     {
@@ -75,18 +82,15 @@ int main(int argc, char *argv[])
 
     WT_LOG_INFO << "Login message serialized, size: " << buf.size();
     uint32_t bodyLen = htonl(static_cast<uint32_t>(buf.size()));
-    sendAll(cilsockfd, reinterpret_cast<const char*>(&bodyLen), sizeof(bodyLen));
-    sendAll(cilsockfd, buf.data(), buf.size());
-        // while(n--){
-        // // 发送数据
-        // int n = send(cilsockfd, buf.data(), buf.size(), MSG_NOSIGNAL);
-        // if (n == -1)
-        // {
-        //     WT_LOG_ERROR << "send login message failed: " << strerror(errno);
-        //     close(cilsockfd);
-        //     return -1;
-        // }
-        // WT_LOG_INFO << "Sent " << n << " bytes";
+        // 发送数据
+        int n = send(cilsockfd, buf.data(), buf.size(), MSG_NOSIGNAL);
+        if (n == -1)
+        {
+            WT_LOG_ERROR << "send login message failed: " << strerror(errno);
+            close(cilsockfd);
+            return -1;
+        }
+        WT_LOG_INFO << "Sent " << n << " bytes";
         
         // n = recv(cilsockfd, buf.data(), buf.size(), 0);
         // if (n == -1)
@@ -97,6 +101,5 @@ int main(int argc, char *argv[])
         // }
         // WT_LOG_INFO << "Received " << n << " bytes";
         // std::this_thread::sleep_for(std::chrono::seconds(1));
-        // }
     while(1);
 }

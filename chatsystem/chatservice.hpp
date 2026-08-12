@@ -11,6 +11,7 @@
 #include<muduo/base/ThreadPool.h>
 #include"chatserver.hpp"
 #include"chat.pb.h"
+#include"UserModel.hpp"
 using namespace muduo;
 using namespace muduo::net;
 using namespace std; 
@@ -25,10 +26,10 @@ class chatservice
     // void  sendResponse(const TcpConnectionPtr& conn, const json& js); 
     // //处理客户端异常退出
     // void clientCloseException(const TcpConnectionPtr& conn);
-    // //处理登录业务
+    //处理登录业务
     void login(const TcpConnectionPtr& conn,const string& js, Timestamp time);
-    // //处理注册业务
-    // void reg(const TcpConnectionPtr& conn, json& js, Timestamp time);
+    //处理注册业务
+    void reg(const TcpConnectionPtr& conn, const string& js, Timestamp time);
     // //一对一聊天业务
     // void oneChat(const TcpConnectionPtr& conn, json& js, Timestamp time);
     // //添加好友业务
@@ -50,13 +51,16 @@ class chatservice
         // 初始化消息id和对应的处理器
         threadpool_.start(4);
         _msgHandlerMap.insert({chat::EnMsgType::LOGIN_MSG, std::bind(&chatservice::login, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)});
+        _msgHandlerMap.insert({chat::EnMsgType::REG_MSG, std::bind(&chatservice::reg, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)});
     }
     chatservice(const chatservice&)=delete;
     chatservice& operator=(const chatservice&)=delete;
     mutex m_mutex;
      // 存储消息id和其对应的业务处理方法
     unordered_map<chat::EnMsgType, MsgHandler> _msgHandlerMap;
+    std::shared_ptr<UserModel> _userModel = std::make_shared<UserModel>();
     // unordered_map<int, TcpConnectionPtr> _userConnMap;
     ThreadPool threadpool_;
+
 };
 #endif

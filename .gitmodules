@@ -1,0 +1,3 @@
+[submodule "logSystem"]
+	path = logSystem
+	url = https://github.com/wangt610/LogSystem.git

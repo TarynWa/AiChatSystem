@@ -13,4 +13,6 @@ target_include_directories(muduo_chat
 
 target_compile_features(muduo_chat PUBLIC cxx_std_17)
 
+target_link_libraries(muduo_chat PUBLIC lib::muduo_log)
+
 add_library(lib::muduo_chat ALIAS muduo_chat)

@@ -7,7 +7,7 @@
 #include "AsyncLogging.hpp"
 #include "FixedThreadPool.hpp"
 
-wangt::AsyncLogging *asynclog = new wangt::AsyncLogging("/home/wangt/ThreadPoolAction/logmsg/chat", 1024 * 10);
+wangt::AsyncLogging *asynclog = nullptr;
 void asyncWriteFile(const string &info)
 {
     asynclog->append(info);
@@ -16,7 +16,6 @@ void asyncFlushFile()
 {
     asynclog->flush();
 }
-
 // int main() {
 
 // wangt::Logger::setOutput(asyncWriteFile);
@@ -47,3 +46,22 @@ void asyncFlushFile()
 //     WT_LOG_INFO << "All tasks completed, counter = " << counter;
 //     return 0;
 // }
+#include "chatserver.hpp"
+int main(int argc, char *argv[])
+ {
+    asynclog = new wangt::AsyncLogging("/home/wangt/ThreadPoolAction/logmsg/ser/server", 1024 * 10);
+    wangt::Logger::setOutput(asyncWriteFile);
+    wangt::Logger::setFlush(asyncFlushFile);
+    if (argc < 3)
+    {
+        WT_LOG_ERROR << "Usage: " << argv[0] << " <ip> <port>";
+        return 1;
+    }
+    EventLoop loop;
+    InetAddress addr(argv[1], atoi(argv[2]));
+    ChatServer server(&loop, addr, "ChatServer");
+    server.start();
+    loop.loop();
+    return 0;
+}
+

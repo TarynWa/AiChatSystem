@@ -8,6 +8,7 @@
 #include<string>
 #include<iostream>
 #include"chatservice.hpp"
+#include"AsyncLogging.hpp"
 #include"chat.pb.h"
 // #include"chatservice.hpp"
 using namespace muduo;

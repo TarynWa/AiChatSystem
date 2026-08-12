@@ -4,11 +4,11 @@ void ChatServer::onConnection(const TcpConnectionPtr &conn)
 {
     if (conn->connected())
     {
-        LOG_INFO<<"ChatServer - "<<conn->peerAddress().toIpPort().c_str()<<" connected";
+        WT_LOG_INFO<<"ChatServer - "<<conn->peerAddress().toIpPort().c_str()<<" connected";
     }
     else
     {
-        LOG_INFO<<"ChatServer - "<<conn->peerAddress().toIpPort().c_str()<<" connected";
+        WT_LOG_INFO<<"ChatServer - "<<conn->peerAddress().toIpPort().c_str()<<" connected";
         // chatservice::instance()->clientCloseException(conn);
         conn->shutdown();
     }
@@ -17,17 +17,17 @@ void ChatServer::onConnection(const TcpConnectionPtr &conn)
 void ChatServer::onMessage(const TcpConnectionPtr &conn, Buffer *buffer, Timestamp time)
 {
     string buff = buffer->retrieveAllAsString();
-    LOG_INFO<<"ChatServer received message:"<<buff;
+    // WT_LOG_INFO<<"ChatServer received message:"<<buff;
 
     // conn->send(buff);
     // threadpool_.run(std::bind(&ChatServer::doHeavyBusiness,this,conn,buff));
     // 业务处理模块
-    try{
+    // try{
     chatservice::instance()->recvmsg(conn,buff,time);
-    }catch(const exception& e){
-        //
-        LOG_ERROR << "JSON parse error: " << e.what();
-    }
+    // }catch(const exception& e){
+    //     //
+    //     WT_LOG_ERROR << "Protobuff parse error: " << e.what();
+    // }
     //int id = js["msgid"].get<int>();
     // auto msgHandler=chatservice::instance()->getMsgHandler(id);
     // msgHandler(conn,js,time);
@@ -44,8 +44,7 @@ ChatServer::ChatServer(EventLoop *loop, const InetAddress &listenAddr, const str
         std::bind(&ChatServer::onConnection, this, _1));
     server_.setMessageCallback(
         std::bind(&ChatServer::onMessage, this, _1, _2, _3));
-
-    server_.setThreadNum(4);
+    // server_.setThreadNum(4);
     //threadpool_.start(4);
 }
 

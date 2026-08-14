@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>聊天室客户端</title>
+    <!--
+      ======================================================
+      前端采用原生 HTML / CSS / JavaScript，不引入任何框架
+      页面结构：
+        - #page-login   登录/注册页（默认显示）
+        - #page-main    登录后的主页面（三栏布局）
+      ======================================================
+    -->
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <!-- ============================================================
+         登录 / 注册 页
+         ============================================================ -->
+    <div id="page-login" class="page active">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1>🐧 Muduo 聊天室</h1>
+                <p class="subtitle">Linux 集群版 · 桌面客户端 (Tauri)</p>
+            </div>
+
+            <!-- Tab 切换 -->
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="login">登录</button>
+                <button class="tab-btn" data-tab="register">注册</button>
+                <button class="tab-btn" data-tab="settings">服务器</button>
+            </div>
+
+            <!-- 登录表单 -->
+            <form id="form-login" class="auth-form active" onsubmit="return onLogin(event)">
+                <div class="field">
+                    <label>用户名</label>
+                    <input type="text" id="login-username" placeholder="请输入用户名" autocomplete="username" required />
+                </div>
+                <div class="field">
+                    <label>密码</label>
+                    <input type="password" id="login-password" placeholder="请输入密码" autocomplete="current-password" required />
+                </div>
+                <div class="status" id="login-status"></div>
+                <button type="submit" class="btn-primary" id="btn-login">登 录</button>
+            </form>
+
+            <!-- 注册表单 -->
+            <form id="form-register" class="auth-form" onsubmit="return onRegister(event)">
+                <div class="field">
+                    <label>用户名</label>
+                    <input type="text" id="reg-username" placeholder="4-20 位字符" minlength="1" maxlength="64" required />
+                </div>
+                <div class="field">
+                    <label>密码</label>
+                    <input type="password" id="reg-password" placeholder="至少 6 位" minlength="6" maxlength="64" required />
+                </div>
+                <div class="field">
+                    <label>确认密码</label>
+                    <input type="password" id="reg-password2" placeholder="再次输入密码" required />
+                </div>
+                <div class="status" id="reg-status"></div>
+                <button type="submit" class="btn-primary" id="btn-register">注 册</button>
+            </form>
+
+            <!-- 服务器设置 -->
+            <form id="form-settings" class="auth-form" onsubmit="return onSetServer(event)">
+                <div class="field">
+                    <label>服务器地址</label>
+                    <input type="text" id="server-addr" value="127.0.0.1:8080" placeholder="ip:port (如 127.0.0.1:8080)" required />
+                </div>
+                <div class="hint">默认连接 Nginx TCP 负载均衡端口 8080；直连节点可改 127.0.0.1:6000 / 6001</div>
+                <div class="status" id="server-status"></div>
+                <button type="submit" class="btn-primary">连 接</button>
+            </form>
+
+            <!-- 网络状态指示器 -->
+            <div class="net-status">
+                <span class="dot" id="net-dot"></span>
+                <span id="net-text">未连接</span>
+                <span style="margin-left:auto;cursor:pointer;color:#3498db;font-size:12px" onclick="document.getElementById('debug-panel').classList.toggle('open')">诊断 🛠</span>
+            </div>
+
+            <!-- 调试面板：显示 Tauri 初始化状态 / 点击事件 / invoke 错误 -->
+            <div id="debug-panel" class="debug-panel">
+                <div class="debug-title">调试信息</div>
+                <pre id="debug-log" class="debug-log">未初始化...</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         主页面（登录成功后显示）
+         ============================================================ -->
+    <div id="page-main" class="page">
+        <!-- 顶部标题栏 -->
+        <div class="top-bar">
+            <div class="top-left">
+                <span class="logo">🐧</span>
+                <span id="top-username" class="top-name">未登录</span>
+            </div>
+            <div class="top-center" id="chat-title">请选择会话</div>
+            <div class="top-right">
+                <span class="dot" id="main-net-dot"></span>
+                <span id="main-net-text">未连接</span>
+                <button class="btn-icon" title="注销" onclick="doLogout()">⎋</button>
+            </div>
+        </div>
+
+        <!-- 三栏主体 -->
+        <div class="main-body">
+            <!-- 左栏：好友列表 / 群列表 -->
+            <aside class="sidebar-left">
+                <div class="section-title">
+                    <span>好友</span>
+                    <button class="btn-icon" title="添加好友" onclick="showAddFriend()">＋</button>
+                </div>
+                <ul id="friend-list" class="friend-list"></ul>
+
+                <div class="section-title">
+                    <span>群组</span>
+                    <button class="btn-icon" title="创建/加入群" onclick="showGroupDialog()">＋</button>
+                </div>
+                <ul id="group-list" class="group-list"></ul>
+            </aside>
+
+            <!-- 中栏：聊天消息区 -->
+            <main class="chat-area">
+                <div id="chat-messages" class="chat-messages"></div>
+                <div class="chat-input-bar">
+                    <textarea id="chat-input" rows="2" placeholder="输入消息，Enter 发送，Shift+Enter 换行" onkeydown="onInputKey(event)"></textarea>
+                    <button class="btn-primary" onclick="doSend()">发 送</button>
+                </div>
+            </main>
+
+            <!-- 右栏：会话详情（好友信息 / 群信息） -->
+            <aside class="sidebar-right" id="detail-panel">
+                <div class="empty-detail">请选择左侧会话</div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         全局 Toast 提示（登录失败/业务错误/网络异常等）
+         ============================================================ -->
+    <div id="toast-container"></div>
+
+    <!-- ============================================================
+         添加好友对话框
+         ============================================================ -->
+    <div id="dlg-add-friend" class="modal-mask" onclick="if(event.target===this)closeModal(this)">
+        <div class="modal">
+            <h3>添加好友</h3>
+            <div class="field">
+                <label>好友用户 ID</label>
+                <input type="number" id="add-friend-id" placeholder="请输入用户 ID（数字）" min="1" />
+            </div>
+            <div class="modal-actions">
+                <button class="btn-default" onclick="closeModal(document.getElementById('dlg-add-friend'))">取消</button>
+                <button class="btn-primary" onclick="doAddFriend()">确定添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         群组对话框（创建群 / 加入群）
+         ============================================================ -->
+    <div id="dlg-group" class="modal-mask" onclick="if(event.target===this)closeModal(this)">
+        <div class="modal">
+            <h3>群组操作</h3>
+            <div class="tab-bar small">
+                <button class="tab-btn active" data-gtab="create">创建群组</button>
+                <button class="tab-btn" data-gtab="join">加入群组</button>
+            </div>
+            <div id="gtab-create" class="gtab active">
+                <div class="field">
+                    <label>群名称</label>
+                    <input type="text" id="create-group-name" placeholder="请输入群名称" />
+                </div>
+                <div class="field">
+                    <label>群描述</label>
+                    <input type="text" id="create-group-desc" placeholder="可选，群简介" />
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-default" onclick="closeModal(document.getElementById('dlg-group'))">取消</button>
+                    <button class="btn-primary" onclick="doCreateGroup()">创建</button>
+                </div>
+            </div>
+            <div id="gtab-join" class="gtab">
+                <div class="field">
+                    <label>群 ID</label>
+                    <input type="number" id="join-group-id" placeholder="请输入群 ID" min="1" />
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-default" onclick="closeModal(document.getElementById('dlg-group'))">取消</button>
+                    <button class="btn-primary" onclick="doJoinGroup()">加入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tauri JS API + 主脚本
+         注意：Tauri 2.x 默认不强制注入全局 __TAURI__，推荐使用 @tauri-apps/api ESM 导入。
+               本脚本通过 @tauri-apps/api CDN + window.__TAURI__ 全局对象 + 浏览器 mock 三层兜底。
+               详细逻辑见 app.js 中的 Tauri 对象封装。 -->
+    <script src="app.js" defer></script>
+</body>
+</html>

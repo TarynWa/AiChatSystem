@@ -9,5 +9,5 @@ enable_testing()
 
 add_subdirectory(logSystem)
 add_subdirectory(threadpool)
-add_subdirectory(chatsystem)
+add_subdirectory(src/chatsystem)
 add_subdirectory(tests)

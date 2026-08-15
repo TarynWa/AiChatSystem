@@ -2,7 +2,7 @@
 
 > 测试时间：2026-08-14
 > 压测工具：[tools/chat_stress.py](file:///home/wangt/ThreadPoolAction/tools/chat_stress.py)（自研，纯 protobuf 手工编解码）
-> 服务端：[chatsystem/chatserver.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/chatserver.cpp) + [chatsystem/chatservice.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp)
+> 服务端：[src/chatsystem/chatserver.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatserver.cpp) + [src/chatsystem/chatservice.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp)
 
 ---
 
@@ -46,10 +46,10 @@
 
 | 组件 | 配置 | 代码位置 |
 |------|------|----------|
-| muduo 网络线程 | 默认（1 主 loop + sub loops） | [chatserver.cpp#L48](file:///home/wangt/ThreadPoolAction/chatsystem/chatserver.cpp#L48)（`setThreadNum` 被注释） |
-| 业务线程池 | 4 个工作线程 | [chatservice.hpp#L59](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.hpp#L59)（`threadpool_.start(4)`） |
-| MySQL 连接池 | 10 个连接 | [mysql.hpp#L59](file:///home/wangt/ThreadPoolAction/chatsystem/mysql.hpp#L59)（`maxSize=10`） |
-| Redis | 单实例，SET + Pub/Sub | [RedisMgr.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/RedisMgr.cpp) |
+| muduo 网络线程 | 默认（1 主 loop + sub loops） | [chatserver.cpp#L48](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatserver.cpp#L48)（`setThreadNum` 被注释） |
+| 业务线程池 | 4 个工作线程 | [chatservice.hpp#L59](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.hpp#L59)（`threadpool_.start(4)`） |
+| MySQL 连接池 | 10 个连接 | [mysql.hpp#L59](file:///home/wangt/ThreadPoolAction/src/chatsystem/mysql.hpp#L59)（`maxSize=10`） |
+| Redis | 单实例，SET + Pub/Sub | [RedisMgr.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/RedisMgr.cpp) |
 | Nginx | TCP stream 负载均衡，2 后端 | 端口 8080 → 6000/6001 |
 
 ### 1.4 压测方法
@@ -131,12 +131,12 @@
 ### 3.1 异步架构设计合理
 - 所有 DB 操作通过 `threadpool_.run()` 派发到 4 个工作线程，不阻塞 muduo IO 线程
 - 单聊、删好友等"轻广播"业务在 16 并发下延迟可控（P95 < 80ms）
-- 参见 [chatservice.cpp#L332](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L332)（addFriend 异步派发）
+- 参见 [chatservice.cpp#L332](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L332)（addFriend 异步派发）
 
 ### 3.2 连接池复用有效
 - MySQL 连接池（10 连接）在 64 并发删好友时仍保持 100% 成功率
 - 连接获取/释放通过 `shared_ptr` 自定义 deleter 自动管理，无泄漏
-- 参见 [mysql.hpp#L37](file:///home/wangt/ThreadPoolAction/chatsystem/mysql.hpp#L37)
+- 参见 [mysql.hpp#L37](file:///home/wangt/ThreadPoolAction/src/chatsystem/mysql.hpp#L37)
 
 ### 3.3 DELETE 操作表现优异
 - 删好友在 16/32/64 三个并发级别全部 100% 成功
@@ -160,7 +160,7 @@
 
 **现象**：群聊和加好友使用批量发送（Fire-and-forget）时成功率极低（10~28%），服务端日志显示大量 `Deserialization failed!`
 
-**根因**：[chatserver.cpp#L19](file:///home/wangt/ThreadPoolAction/chatsystem/chatserver.cpp#L19)
+**根因**：[chatserver.cpp#L19](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatserver.cpp#L19)
 ```cpp
 string buff = buffer->retrieveAllAsString();  // 取出整个缓冲区
 chatservice::instance()->recvmsg(conn, buff, time);  // 当作 1 条 protobuf 解析
@@ -177,7 +177,7 @@ chatservice::instance()->recvmsg(conn, buff, time);  // 当作 1 条 protobuf �
 
 **现象**：16 人群聊在 16 并发下成功率仅 14.6%
 
-**根因**：[chatservice.cpp#L541](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L541) groupChat 对每条消息：
+**根因**：[chatservice.cpp#L541](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L541) groupChat 对每条消息：
 1. 异步查群成员（1 次 DB SELECT）
 2. 遍历 16 成员，查本地 `_userConnMap`
 3. 未命中成员逐个查 Redis `SISMEMBER`
@@ -191,7 +191,7 @@ chatservice::instance()->recvmsg(conn, buff, time);  // 当作 1 条 protobuf �
 
 **现象**：32 并发时成功率从 100% 暴跌至 49.4%
 
-**根因**：[FriendModel.cpp#L10-L11](file:///home/wangt/ThreadPoolAction/chatsystem/FriendModel.cpp#L10)
+**根因**：[FriendModel.cpp#L10-L11](file:///home/wangt/ThreadPoolAction/src/chatsystem/FriendModel.cpp#L10)
 ```cpp
 string sql1 = "INSERT INTO Friend(userid, friendid) VALUES(" + userid + ", " + friendid + ")";
 string sql2 = "INSERT INTO Friend(userid, friendid) VALUES(" + friendid + ", " + userid + ")";
@@ -208,17 +208,17 @@ string sql2 = "INSERT INTO Friend(userid, friendid) VALUES(" + friendid + ", " +
 
 **现象**：单聊拐点在 16 并发，RPS 不随并发增长
 
-**根因**：[chatservice.hpp#L59](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.hpp#L59) `threadpool_.start(4)` 仅启动 4 个工作线程。所有异步 DB 任务（注册、加好友、删好友、群聊查成员、离线消息存储）共享这 4 个线程。16 并发时任务队列积压，延迟线性上升。
+**根因**：[chatservice.hpp#L59](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.hpp#L59) `threadpool_.start(4)` 仅启动 4 个工作线程。所有异步 DB 任务（注册、加好友、删好友、群聊查成员、离线消息存储）共享这 4 个线程。16 并发时任务队列积压，延迟线性上升。
 
 **影响**：单聊 64 并发 P99 达 210ms（16 并发的 2.8 倍），但 RPS 反而下降。
 
 ### 4.5 ⚠️ muduo setThreadNum 被注释
 
-**现象**：[chatserver.cpp#L48](file:///home/wangt/ThreadPoolAction/chatsystem/chatserver.cpp#L48) `// server_.setThreadNum(4);` 被注释，muduo 使用默认线程数。网络 IO 事件处理可能集中在少数 sub-loop，限制单节点连接处理能力。
+**现象**：[chatserver.cpp#L48](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatserver.cpp#L48) `// server_.setThreadNum(4);` 被注释，muduo 使用默认线程数。网络 IO 事件处理可能集中在少数 sub-loop，限制单节点连接处理能力。
 
 ### 4.6 ⚠️ DB 操作未使用预编译语句
 
-**现象**：[FriendModel.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/FriendModel.cpp)、[UserModel.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/UserModel.cpp) 等使用字符串拼接 SQL，每次调用 `mysql_query` 都需解析 SQL。在高频删除/插入场景增加 DB CPU 开销。
+**现象**：[FriendModel.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/FriendModel.cpp)、[UserModel.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/UserModel.cpp) 等使用字符串拼接 SQL，每次调用 `mysql_query` 都需解析 SQL。在高频删除/插入场景增加 DB CPU 开销。
 
 ### 4.7 ⚠️ 客户端 recv 解析脆弱
 

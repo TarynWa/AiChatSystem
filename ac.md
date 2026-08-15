@@ -57,7 +57,7 @@
 
 **源码定位**：
 - 服务端入口：[TestLogThreadPool.cpp:20-46](file:///home/wangt/ThreadPoolAction/tests/TestLogThreadPool.cpp#L20-L46)
-- 消息分发：[chatservice.cpp:9-25](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L9-L25)
+- 消息分发：[chatservice.cpp:9-25](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L9-L25)
 - 客户端 TCP 层：[tcp.rs](file:///home/wangt/ThreadPoolAction/chat-client/src-tauri/src/tcp.rs)
 
 ---
@@ -182,7 +182,7 @@
    - `TcpConnection`：单条 TCP 连接的抽象，带 input/output buffer
    - `Buffer`：muduo 自带的 buffer，应用层流量控制
 
-3. **本项目的使用**（[chatserver.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/chatserver.cpp)）：
+3. **本项目的使用**（[chatserver.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatserver.cpp)）：
    ```cpp
    void ChatServer::onMessage(const TcpConnectionPtr& conn, Buffer* buffer, Timestamp time) {
        string buff = buffer->retrieveAllAsString();   // 取出全部数据
@@ -204,8 +204,8 @@
 - **连接断开怎么感知？** `onConnection` 回调里 `conn->connected()` 返回 false 时，调用 `clientCloseException` 清理 `_userConnMap`
 
 **源码定位**：
-- 服务器：[chatserver.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/chatserver.cpp)
-- 服务器头：[chatserver.hpp](file:///home/wangt/ThreadPoolAction/chatsystem/chatserver.hpp)
+- 服务器：[chatserver.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatserver.cpp)
+- 服务器头：[chatserver.hpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatserver.hpp)
 
 ---
 
@@ -215,7 +215,7 @@
 
 **核心要点**：
 
-1. **协议结构**（[chat.proto](file:///home/wangt/ThreadPoolAction/chatsystem/chat.proto)）：
+1. **协议结构**（[chat.proto](file:///home/wangt/ThreadPoolAction/src/chatsystem/chat.proto)）：
    ```proto
    enum EnMsgType {
        MSG_NONE = 0;          // proto3 首项必须为 0
@@ -256,8 +256,8 @@
 - **字段号有什么规则？** 1-15 用 1 字节 varint 编码（高频字段优先）；16-2047 用 2 字节；19000-19999 保留
 
 **源码定位**：
-- 协议定义：[chat.proto](file:///home/wangt/ThreadPoolAction/chatsystem/chat.proto)
-- 生成的 C++ 代码：[chat.pb.h](file:///home/wangt/ThreadPoolAction/chatsystem/chat.pb.h)
+- 协议定义：[chat.proto](file:///home/wangt/ThreadPoolAction/src/chatsystem/chat.proto)
+- 生成的 C++ 代码：[chat.pb.h](file:///home/wangt/ThreadPoolAction/src/chatsystem/chat.pb.h)
 - 生成的 Rust 代码：[target/debug/build/chat-client-*/out/chat.rs](file:///home/wangt/ThreadPoolAction/chat-client/src-tauri/target/debug/build/chat-client-494623afd1c28d4e/out/chat.rs)
 
 ---
@@ -268,7 +268,7 @@
 
 **核心要点**：
 
-1. **单例模式**（[chatservice.cpp:3-7](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L3-L7)）：
+1. **单例模式**（[chatservice.cpp:3-7](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L3-L7)）：
    ```cpp
    chatservice* chatservice::instance() {
        static chatservice service;
@@ -278,7 +278,7 @@
    - Meyers 单例，C++11 起线程安全
    - 全局唯一入口，便于在 `onMessage` 中获取
 
-2. **消息分发**（[chatservice.cpp:9-25](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L9-L25)）：
+2. **消息分发**（[chatservice.cpp:9-25](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L9-L25)）：
    ```cpp
    void recvmsg(const TcpConnectionPtr& conn, const string& js, Timestamp time) {
        chat::BaseMessage menu;
@@ -290,9 +290,9 @@
    }
    ```
    - 用 `std::unordered_map<EnMsgType, Handler>` 做 O(1) 分发
-   - 在构造函数中 `insert` 注册所有 handler（[chatservice.hpp:60-69](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.hpp#L60-L69)）
+   - 在构造函数中 `insert` 注册所有 handler（[chatservice.hpp:60-69](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.hpp#L60-L69)）
 
-3. **登录流程**（[chatservice.cpp:28-124](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L28-L124)）：
+3. **登录流程**（[chatservice.cpp:28-124](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L28-L124)）：
    - 解析 `LoginRequest`
    - 同步 `_userModel->query(id)` 取出 User（这里其实应该异步化，改进点）
    - 用 `PwdUtils::verify` 校验密码（SHA256(salt + plaintext) == hashed）
@@ -310,12 +310,12 @@
 **追问点**：
 - **`_userConnMap` 加锁粒度？** 整个 map 一把锁；高并发下可分片（按 uid 取模）减小争用（改进点）
 - **登录失败为什么也回 ACK？** 让客户端知道失败原因，不能让前端一直转圈
-- **离线消息怎么投递？** 登录成功后异步查 `OfflineMessage` 表，循环 `conn->send`，最后 `remove` 清空（[chatservice.cpp:74-106](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L74-L106)）
+- **离线消息怎么投递？** 登录成功后异步查 `OfflineMessage` 表，循环 `conn->send`，最后 `remove` 清空（[chatservice.cpp:74-106](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L74-L106)）
 
 **源码定位**：
-- 主分发：[chatservice.cpp:9-25](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L9-L25)
-- 登录业务：[chatservice.cpp:28-124](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L28-L124)
-- handler 注册：[chatservice.hpp:58-70](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.hpp#L58-L70)
+- 主分发：[chatservice.cpp:9-25](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L9-L25)
+- 登录业务：[chatservice.cpp:28-124](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L28-L124)
+- handler 注册：[chatservice.hpp:58-70](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.hpp#L58-L70)
 
 ---
 
@@ -332,7 +332,7 @@
    - `GroupUser`：groupid / userid / role（creator/normal）
    - `OfflineMessage`：userid / fromid / msgtype / content
 
-2. **异步派发模式**（以注册为例，[chatservice.cpp:159-](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L159)）：
+2. **异步派发模式**（以注册为例，[chatservice.cpp:159-](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L159)）：
    ```cpp
    threadpool_.run([this, conn, loop, name, password]() {
        // 在线程池中执行 DB 查询
@@ -361,9 +361,9 @@
 - **为什么 group_id 不自增？** 用 AUTO_INCREMENT；项目设计已预留集群扩展（可改 Snowflake）
 
 **源码定位**：
-- MySQL 封装：[mysql.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/mysql.cpp)
-- User 模型：[UserModel.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/UserModel.cpp)
-- 离线消息：[OfflineMsgModel.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/OfflineMsgModel.cpp)
+- MySQL 封装：[mysql.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/mysql.cpp)
+- User 模型：[UserModel.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/UserModel.cpp)
+- 离线消息：[OfflineMsgModel.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/OfflineMsgModel.cpp)
 
 ---
 
@@ -371,7 +371,7 @@
 
 **问法**：密码是怎么存储的？为什么不能用 MD5？
 
-**核心要点**（[PwdUtils.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/PwdUtils.cpp)）：
+**核心要点**（[PwdUtils.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/PwdUtils.cpp)）：
 
 1. **生成盐**：
    ```cpp
@@ -391,7 +391,7 @@
    - `SHA256(salt + plainPassword)`，盐与密码拼接后哈希
    - 存储的是 64 字符 hex
 
-3. **校验**（[PwdUtils.cpp:35-43](file:///home/wangt/ThreadPoolAction/chatsystem/PwdUtils.cpp#L35-L43)）：
+3. **校验**（[PwdUtils.cpp:35-43](file:///home/wangt/ThreadPoolAction/src/chatsystem/PwdUtils.cpp#L35-L43)）：
    ```cpp
    bool verify(const string& plainPassword, const string& salt, const string& hashedPassword) {
        string computed = sha256(salt + plainPassword);
@@ -411,7 +411,7 @@
 - **如何防暴力破解？** 加迭代（如 bcrypt cost=12）；本项目当前单次 SHA256，理论可被字典暴力破解（改进点）
 
 **源码定位**：
-- 加密工具：[PwdUtils.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/PwdUtils.cpp) / [PwdUtils.hpp](file:///home/wangt/ThreadPoolAction/chatsystem/PwdUtils.hpp)
+- 加密工具：[PwdUtils.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/PwdUtils.cpp) / [PwdUtils.hpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/PwdUtils.hpp)
 
 ---
 
@@ -425,12 +425,12 @@
    - `chat:online_users`：SET，存全局在线用户 id（所有节点共享）
    - `chat:cross_node`：Pub/Sub channel，跨节点消息转发
 
-2. **用户上线流程**（[chatservice.cpp:54](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L54)）：
+2. **用户上线流程**（[chatservice.cpp:54](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L54)）：
    ```cpp
    RedisMgr::instance()->addUserOnline(id);  // SADD chat:online_users id
    ```
 
-3. **跨节点消息路由三级决策**（[chatservice.cpp:566-613](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L566-L613)）：
+3. **跨节点消息路由三级决策**（[chatservice.cpp:566-613](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L566-L613)）：
    ```
    发送私聊/群聊消息
         ↓
@@ -441,12 +441,12 @@
    3. 存入 MySQL OfflineMessage 表
    ```
 
-4. **RedisMgr 设计**（[RedisMgr.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/RedisMgr.cpp)）：
+4. **RedisMgr 设计**（[RedisMgr.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/RedisMgr.cpp)）：
    - 两条独立连接：`_publishCtx` 用于 PUBLISH，`_subscribeCtx` 用于 SUBSCRIBE
    - 原因：hiredis 在 SUBSCRIBE 模式下阻塞等待消息，无法复用同一连接做 PUBLISH
    - SUBSCRIBE 线程独立运行，收到消息后回调到 chatservice
 
-5. **跨节点消息格式**（[chat.proto:142-146](file:///home/wangt/ThreadPoolAction/chatsystem/chat.proto#L142-L146)）：
+5. **跨节点消息格式**（[chat.proto:142-146](file:///home/wangt/ThreadPoolAction/src/chatsystem/chat.proto#L142-L146)）：
    ```proto
    message CrossNodeMsg {
        int64 target_user_id = 1;   // 接收节点在 _userConnMap 中查找
@@ -463,9 +463,9 @@
 - **如何扩展到 N 个节点？** Redis 在线 SET 天然支持；nginx upstream 加 server 即可
 
 **源码定位**：
-- Redis 管理：[RedisMgr.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/RedisMgr.cpp) / [RedisMgr.hpp](file:///home/wangt/ThreadPoolAction/chatsystem/RedisMgr.hpp)
-- 群聊跨节点逻辑：[chatservice.cpp:595-613](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L595-L613)
-- 跨节点消息定义：[chat.proto:142-146](file:///home/wangt/ThreadPoolAction/chatsystem/chat.proto#L142-L146)
+- Redis 管理：[RedisMgr.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/RedisMgr.cpp) / [RedisMgr.hpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/RedisMgr.hpp)
+- 群聊跨节点逻辑：[chatservice.cpp:595-613](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L595-L613)
+- 跨节点消息定义：[chat.proto:142-146](file:///home/wangt/ThreadPoolAction/src/chatsystem/chat.proto#L142-L146)
 
 ---
 
@@ -608,9 +608,9 @@
 
 **候选回答**：
 
-1. **跨节点消息丢失**：初期用 Redis Pub/Sub 直接转发消息，订阅者不在线时消息丢失。改方案：先查 Redis `SISMEMBER` 判断在线状态，离线则存 MySQL `OfflineMessage` 表，登录时拉取（[chatservice.cpp:595-613](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L595-L613)）
+1. **跨节点消息丢失**：初期用 Redis Pub/Sub 直接转发消息，订阅者不在线时消息丢失。改方案：先查 Redis `SISMEMBER` 判断在线状态，离线则存 MySQL `OfflineMessage` 表，登录时拉取（[chatservice.cpp:595-613](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L595-L613)）
 
-2. **muduo IO 线程阻塞**：初期把 MySQL 查询写在 IO 线程，导致所有连接卡顿。改方案：用 `threadpool_.run()` 派发到工作线程，结果通过 `loop->runInLoop` 回 IO 线程发送（[chatservice.cpp:159](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp#L159)）
+2. **muduo IO 线程阻塞**：初期把 MySQL 查询写在 IO 线程，导致所有连接卡顿。改方案：用 `threadpool_.run()` 派发到工作线程，结果通过 `loop->runInLoop` 回 IO 线程发送（[chatservice.cpp:159](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp#L159)）
 
 3. **Tauri 客户端登录无响应**：Tauri 2.x 的 `window.__TAURI__` 注入路径与 1.x 不同，前端调用 `invoke` 静默失败。修复：兼容多种 IPC 路径（ESM `@tauri-apps/api/core` → 全局 2.x → 全局 1.x → Mock）
 
@@ -698,14 +698,14 @@
 | 线程池 | [WorkThreadPool.hpp](file:///home/wangt/ThreadPoolAction/threadpool/WorkThreadPool.hpp) |
 | 同步队列 | [SyncQueue2.hpp](file:///home/wangt/ThreadPoolAction/threadpool/SyncQueue2.hpp) |
 | 异步日志 | [AsyncLogging.cpp](file:///home/wangt/ThreadPoolAction/logSystem/logsys/src/AsyncLogging.cpp) |
-| ChatServer | [chatserver.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/chatserver.cpp) |
-| ChatService | [chatservice.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.cpp) / [chatservice.hpp](file:///home/wangt/ThreadPoolAction/chatsystem/chatservice.hpp) |
-| Protobuf 协议 | [chat.proto](file:///home/wangt/ThreadPoolAction/chatsystem/chat.proto) |
-| 密码安全 | [PwdUtils.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/PwdUtils.cpp) |
-| Redis 管理 | [RedisMgr.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/RedisMgr.cpp) |
-| MySQL | [mysql.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/mysql.cpp) |
-| User 模型 | [UserModel.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/UserModel.cpp) |
-| 离线消息 | [OfflineMsgModel.cpp](file:///home/wangt/ThreadPoolAction/chatsystem/OfflineMsgModel.cpp) |
+| ChatServer | [chatserver.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatserver.cpp) |
+| ChatService | [chatservice.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp) / [chatservice.hpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.hpp) |
+| Protobuf 协议 | [chat.proto](file:///home/wangt/ThreadPoolAction/src/chatsystem/chat.proto) |
+| 密码安全 | [PwdUtils.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/PwdUtils.cpp) |
+| Redis 管理 | [RedisMgr.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/RedisMgr.cpp) |
+| MySQL | [mysql.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/mysql.cpp) |
+| User 模型 | [UserModel.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/UserModel.cpp) |
+| 离线消息 | [OfflineMsgModel.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/OfflineMsgModel.cpp) |
 | 客户端 TCP | [tcp.rs](file:///home/wangt/ThreadPoolAction/chat-client/src-tauri/src/tcp.rs) |
 | 客户端命令 | [lib.rs](file:///home/wangt/ThreadPoolAction/chat-client/src-tauri/src/lib.rs) |
 | 客户端前端 | [app.js](file:///home/wangt/ThreadPoolAction/chat-client/src/app.js) |

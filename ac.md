@@ -125,7 +125,7 @@
    - `buffers_`：已写满待刷盘的缓冲队列
    - 后台 flush 线程定时（`flushInterval_`）或缓冲满时把 `buffers_` 写到文件
 
-2. **append 流程**（[AsyncLogging.cpp:44-59](file:///home/wangt/ThreadPoolAction/logSystem/logsys/src/AsyncLogging.cpp#L44-L59)）：
+2. **append 流程**（[AsyncLogging.cpp:44-59](file:///home/wangt/ThreadPoolAction/src/logSystem/logsys/src/AsyncLogging.cpp#L44-L59)）：
    ```cpp
    void append(const char* info, int len) {
        std::unique_lock<std::mutex> _lock(mutex_);
@@ -153,14 +153,14 @@
    - 即使日志磁盘满了，业务依然能继续处理请求
 
 **追问点**：
-- **日志丢失怎么办？** 进程崩溃时 `currentBuffer_` 中未刷盘的日志会丢；可通过析构时 `flush()` 兜底（[AsyncLogging.cpp:18-25](file:///home/wangt/ThreadPoolAction/logSystem/logsys/src/AsyncLogging.cpp#L18-L25)）
+- **日志丢失怎么办？** 进程崩溃时 `currentBuffer_` 中未刷盘的日志会丢；可通过析构时 `flush()` 兜底（[AsyncLogging.cpp:18-25](file:///home/wangt/ThreadPoolAction/src/logSystem/logsys/src/AsyncLogging.cpp#L18-L25)）
 - **多线程同时写日志会乱序吗？** `mutex_` 保证 `append` 串行；后台 flush 单线程串行写文件，顺序由入队时间决定
 - **如果日志量很大，队列满了怎么办？** 当前实现 `buffers_` 是 `vector` 无上限，OOM 风险存在；可加有界队列 + 丢弃策略（改进点）
 
 **源码定位**：
-- 异步日志：[AsyncLogging.cpp](file:///home/wangt/ThreadPoolAction/logSystem/logsys/src/AsyncLogging.cpp)
-- 日志文件：[LogFile.cpp](file:///home/wangt/ThreadPoolAction/logSystem/logsys/src/LogFile.cpp)
-- 日志接口：[Logger.cpp](file:///home/wangt/ThreadPoolAction/logSystem/logsys/src/Logger.cpp)
+- 异步日志：[AsyncLogging.cpp](file:///home/wangt/ThreadPoolAction/src/logSystem/logsys/src/AsyncLogging.cpp)
+- 日志文件：[LogFile.cpp](file:///home/wangt/ThreadPoolAction/src/logSystem/logsys/src/LogFile.cpp)
+- 日志接口：[Logger.cpp](file:///home/wangt/ThreadPoolAction/src/logSystem/logsys/src/Logger.cpp)
 
 ---
 
@@ -697,7 +697,7 @@
 |---|---|
 | 线程池 | [WorkThreadPool.hpp](file:///home/wangt/ThreadPoolAction/threadpool/WorkThreadPool.hpp) |
 | 同步队列 | [SyncQueue2.hpp](file:///home/wangt/ThreadPoolAction/threadpool/SyncQueue2.hpp) |
-| 异步日志 | [AsyncLogging.cpp](file:///home/wangt/ThreadPoolAction/logSystem/logsys/src/AsyncLogging.cpp) |
+| 异步日志 | [AsyncLogging.cpp](file:///home/wangt/ThreadPoolAction/src/logSystem/logsys/src/AsyncLogging.cpp) |
 | ChatServer | [chatserver.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatserver.cpp) |
 | ChatService | [chatservice.cpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.cpp) / [chatservice.hpp](file:///home/wangt/ThreadPoolAction/src/chatsystem/chatservice.hpp) |
 | Protobuf 协议 | [chat.proto](file:///home/wangt/ThreadPoolAction/src/chatsystem/chat.proto) |

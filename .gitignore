@@ -1,5 +1,6 @@
 # 构建目录
 chat-client/src-tauri/target/
+logmsg/
 build/
 bin/
 *.o

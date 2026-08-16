@@ -143,8 +143,11 @@ def encode_base_message(msg_type, payload):
     外层信封 BaseMessage
       field 1: EnMsgType type (enum -> varint wire 0)
       field 2: bytes payload (wire 2)
+    外加 4 字节大端长度前缀（与服务端 onMessage 分帧逻辑对齐，解决 TCP 粘包）：
+      [4-byte len][BaseMessage bytes]
     """
-    return _field_varint(1, msg_type) + _field_length(2, payload)
+    inner = _field_varint(1, msg_type) + _field_length(2, payload)
+    return struct.pack('>I', len(inner)) + inner
 
 
 # ============================================================
@@ -266,36 +269,19 @@ def send_and_recv(sock, msg_type, payload_bytes, timeout=DEFAULT_TIMEOUT):
 
 def try_split_multi(data):
     """
-    muduo 可能连续 send 多条 BaseMessage 粘到一起（因为 conn->send 非阻塞发送）。
-    用启发式方式按 BaseMessage tag+len 切分：
-      field 1: varint type（1~20 之间合理）
-      field 2: wire=2 + varint(len) + payload_bytes（字节数与 len 对齐）
-    返回 list[one_message_bytes]
+    按 4 字节大端长度前缀切分粘包数据，与服务端 sendFrame 配对。
+    每帧格式：[4-byte len][BaseMessage bytes]
+    返回 list[BaseMessage_bytes]（不含长度前缀）
     """
     out = []
     pos = 0
-    while pos < len(data):
-        try:
-            tag, p1 = _decode_varint(data, pos)
-            if tag & 0x7 != 0:
-                # 不是 type(field 1, wire 0)，跳过 1 字节继续尝试
-                pos += 1
-                continue
-            msg_type, p2 = _decode_varint(data, p1)
-            # 下一字段应该是 payload（field 2, wire 2）
-            tag2, p3 = _decode_varint(data, p2)
-            if tag2 != (2 << 3) | 2:
-                pos += 1
-                continue
-            plen, p4 = _decode_varint(data, p3)
-            total_msg_len = p4 + plen
-            if total_msg_len > len(data) - pos:
-                # 不够一帧，结束
-                break
-            out.append(bytes(data[pos : pos + total_msg_len]))
-            pos += total_msg_len
-        except Exception:
-            break
+    while pos + 4 <= len(data):
+        frame_len = struct.unpack('>I', data[pos:pos + 4])[0]
+        pos += 4
+        if frame_len <= 0 or pos + frame_len > len(data):
+            break  # 帧不完整，丢弃
+        out.append(bytes(data[pos:pos + frame_len]))
+        pos += frame_len
     return out or ([data] if data else [])
 
 
@@ -481,6 +467,14 @@ def run_functional_tests():
     ok, msg = tester.one_chat(sB, uidB, uidA, f"hi back from uid={uidB}", wait_ack=True)
     case("B→A 私聊回", ok, msg)
 
+    # 8.5 排空 sA 上残留的 B→A 私聊广播，避免干扰后续 ACK 接收
+    try:
+        sA.settimeout(0.2)
+        while True:
+            _ = sA.recv(65536)
+    except Exception:
+        pass
+
     # 9. A 删 B 好友
     ok, msg = tester.del_friend(sA, uidA, uidB)
     case(f"A({uidA}) 删 B({uidB}) 好友", ok, msg)
@@ -569,58 +563,68 @@ class StressWorker:
     # ===== 复用已登录连接的高频业务压测接口 =====
     # 以下方法均假设 sock 已完成 LOGIN，可直接发业务消息。
     def send_one_round_add_friend(self, sock, target_uid):
-        """单次加好友：发 ADD_FRIEND_MSG(8) → 等 ADD_FRIEND_MSG_ACK(9)"""
+        """单次加好友：发 ADD_FRIEND_MSG(8) → 循环读直到 ADD_FRIEND_MSG_ACK(9)"""
         payload = encode_add_friend(self.uid, target_uid)
         sock.sendall(encode_base_message(8, payload))
-        resp = recv_all(sock, timeout=8)
-        for frame in try_split_multi(resp):
-            tp, py = parse_base_message(frame)
-            if tp == 9:
-                fields = decode_scalar_fields(py)
-                code = extract_int_field(fields, 1, 0)
-                return code == 0
+        end = time.time() + 8
+        while time.time() < end:
+            resp = recv_all(sock, timeout=2)
+            for frame in try_split_multi(resp):
+                tp, py = parse_base_message(frame)
+                if tp == 9:
+                    fields = decode_scalar_fields(py)
+                    code = extract_int_field(fields, 1, 0)
+                    return code == 0
         return False
 
     def send_one_round_del_friend(self, sock, target_uid):
-        """单次删好友：发 DEL_FRIEND_MSG(10) → 等 DEL_FRIEND_MSG_ACK(11)"""
+        """单次删好友：发 DEL_FRIEND_MSG(10) → 循环读直到 DEL_FRIEND_MSG_ACK(11)"""
         payload = encode_del_friend(self.uid, target_uid)
         sock.sendall(encode_base_message(10, payload))
-        resp = recv_all(sock, timeout=8)
-        for frame in try_split_multi(resp):
-            tp, py = parse_base_message(frame)
-            if tp == 11:
-                fields = decode_scalar_fields(py)
-                code = extract_int_field(fields, 1, 0)
-                return code == 0
+        end = time.time() + 8
+        while time.time() < end:
+            resp = recv_all(sock, timeout=2)
+            for frame in try_split_multi(resp):
+                tp, py = parse_base_message(frame)
+                if tp == 11:
+                    fields = decode_scalar_fields(py)
+                    code = extract_int_field(fields, 1, 0)
+                    return code == 0
         return False
 
     def send_one_round_one_chat(self, sock, target_uid, round_idx):
-        """单次私聊：发 ONE_CHAT_MSG(6) → 等 ONE_CHAT_MSG_ACK(7)
+        """单次私聊：发 ONE_CHAT_MSG(6) → 循环读直到 ONE_CHAT_MSG_ACK(7)
         与 connect_chat 模式不同：本方法假定 sock 已经登录，只压"消息发送"环节"""
         content = f"W{self.worker_index} R{round_idx} {random.randint(0, 10**9)}"
         payload = encode_one_chat(self.uid, target_uid, content, int(time.time() * 1000))
         sock.sendall(encode_base_message(6, payload))
-        resp = recv_all(sock, timeout=5)
-        for frame in try_split_multi(resp):
-            tp, py = parse_base_message(frame)
-            if tp == 7:
-                fields = decode_scalar_fields(py)
-                code = extract_int_field(fields, 1, 0)
-                return code == 0
+        end = time.time() + 5
+        while time.time() < end:
+            resp = recv_all(sock, timeout=2)
+            for frame in try_split_multi(resp):
+                tp, py = parse_base_message(frame)
+                if tp == 7:
+                    fields = decode_scalar_fields(py)
+                    code = extract_int_field(fields, 1, 0)
+                    return code == 0
         return True  # 无 ACK 也算发送完成
 
     def send_one_round_group_chat(self, sock, group_id, round_idx):
-        """单次群聊：发 GROUP_CHAT_MSG(18) → 等 GROUP_CHAT_MSG_ACK(19)"""
+        """单次群聊：发 GROUP_CHAT_MSG(18) → 循环读直到拿到 GROUP_CHAT_MSG_ACK(19)
+        群聊场景下 socket 会收到大量其他成员的广播消息(18)，需跳过它们找到 ACK(19)。"""
         content = f"G{group_id} W{self.worker_index} R{round_idx} {random.randint(0, 10**9)}"
         payload = encode_group_chat(self.uid, group_id, content, int(time.time() * 1000))
         sock.sendall(encode_base_message(18, payload))
-        resp = recv_all(sock, timeout=8)
-        for frame in try_split_multi(resp):
-            tp, py = parse_base_message(frame)
-            if tp == 19:
-                fields = decode_scalar_fields(py)
-                code = extract_int_field(fields, 1, 0)
-                return code == 0
+        end = time.time() + 8
+        while time.time() < end:
+            resp = recv_all(sock, timeout=2)
+            for frame in try_split_multi(resp):
+                tp, py = parse_base_message(frame)
+                if tp == 19:
+                    fields = decode_scalar_fields(py)
+                    code = extract_int_field(fields, 1, 0)
+                    return code == 0
+                # tp == 18 是其他成员的群聊广播，跳过
         return False
 
     # ===== Fire-and-forget 批量模式：发完所有请求后统一收 ACK =====

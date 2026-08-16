@@ -9,6 +9,7 @@
 #include<memory>
 #include<muduo/base/Logging.h>
 #include<muduo/base/ThreadPool.h>
+#include<arpa/inet.h>
 #include"chatserver.hpp"
 #include"chat.pb.h"
 #include"UserModel.hpp"
@@ -25,6 +26,8 @@ class chatservice
 {
     public:
     static chatservice* instance();
+    // 发送带4字节长度前缀的消息帧，解决TCP粘包
+    static void sendFrame(const TcpConnectionPtr& conn, const string& payload);
     void recvmsg(const TcpConnectionPtr& conn,const string& js, Timestamp time);
     //处理客户端异常退出（连接断开时清理在线状态）
     void clientCloseException(const TcpConnectionPtr& conn);

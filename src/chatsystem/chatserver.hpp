@@ -7,6 +7,8 @@
 #include<functional>
 #include<string>
 #include<iostream>
+#include<cstring>
+#include<arpa/inet.h>
 #include"chatservice.hpp"
 #include"AsyncLogging.hpp"
 #include"chat.pb.h"
@@ -14,9 +16,10 @@
 using namespace muduo;
 using namespace muduo::net;
 using namespace std;
-using namespace placeholders;   
+using namespace placeholders;
 class ChatServer
 {
+    static constexpr int kHeaderLen = 4; // 消息长度前缀字节数
     TcpServer server_;
     EventLoop* loop_;
     //ThreadPool threadpool_;

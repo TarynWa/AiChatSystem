@@ -16,26 +16,29 @@ void ChatServer::onConnection(const TcpConnectionPtr &conn)
 
 void ChatServer::onMessage(const TcpConnectionPtr &conn, Buffer *buffer, Timestamp time)
 {
-    string buff = buffer->retrieveAllAsString();
-    // WT_LOG_INFO<<"ChatServer received message:"<<buff;
-
-    // conn->send(buff);
-    // threadpool_.run(std::bind(&ChatServer::doHeavyBusiness,this,conn,buff));
-    // 业务处理模块
-    // try{
-    chatservice::instance()->recvmsg(conn,buff,time);
-    // }catch(const exception& e){
-    //     //
-    //     WT_LOG_ERROR << "Protobuff parse error: " << e.what();
-    // }
-    //int id = js["msgid"].get<int>();
-    // auto msgHandler=chatservice::instance()->getMsgHandler(id);
-    // msgHandler(conn,js,time);
-    // auto chatservice = chatservice::instance();
-    // auto msgHandler = chatservice->getMsgHandler(id);
-    // threadpool_.run(std::bind(msgHandler, conn, js, time));
-   // threadpool_.run(std::bind((chatservice::instance()->getMsgHandler(id)),conn,js,time));
-
+    // 消息分帧：每条消息 = [4字节大端长度][protobuf payload]
+    // 解决 TCP 粘包：缓冲区可能包含多条消息，循环按长度前缀切分逐条处理
+    while (buffer->readableBytes() >= kHeaderLen)
+    {
+        // peek 4字节长度前缀（不消费）
+        int32_t be32 = 0;
+        memcpy(&be32, buffer->peek(), kHeaderLen);
+        int32_t len = ntohl(be32);
+        // 合法性检查
+        if (len <= 0 || len > 16 * 1024 * 1024)
+        {
+            WT_LOG_ERROR << "Invalid frame length: " << len << ", closing connection";
+            conn->shutdown();
+            return;
+        }
+        // 数据不足一帧，等待后续到达
+        if (static_cast<int32_t>(buffer->readableBytes()) < kHeaderLen + len)
+            break;
+        // 消费长度前缀 + 取出 protobuf payload
+        buffer->retrieve(kHeaderLen);
+        string payload = buffer->retrieveAsString(len);
+        chatservice::instance()->recvmsg(conn, payload, time);
+    }
 }
 
 ChatServer::ChatServer(EventLoop *loop, const InetAddress &listenAddr, const string &nameArg) : loop_(loop), server_(loop, listenAddr, nameArg)

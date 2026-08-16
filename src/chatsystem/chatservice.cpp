@@ -6,6 +6,20 @@ chatservice *chatservice::instance()
     return &service;
 }
 
+// 发送带4字节大端长度前缀的消息帧：[4字节长度][protobuf payload]
+// 与 onMessage 的分帧逻辑配对，彻底解决TCP粘包导致的多消息丢弃问题
+void chatservice::sendFrame(const TcpConnectionPtr& conn, const string& payload)
+{
+    if (!conn || !conn->connected())
+        return;
+    int32_t be32 = htonl(static_cast<int32_t>(payload.size()));
+    string frame;
+    frame.reserve(sizeof(be32) + payload.size());
+    frame.append(reinterpret_cast<const char*>(&be32), sizeof(be32));
+    frame.append(payload);
+    conn->send(frame);
+}
+
 void chatservice::recvmsg(const TcpConnectionPtr &conn, const string &js, Timestamp time)
 {
     chat::BaseMessage menu;
@@ -66,7 +80,7 @@ void chatservice::login(const TcpConnectionPtr &conn,const string &js, Timestamp
                WT_LOG_ERROR << "Serialization failed!";
                return ;
            }
-           conn->send(buf);
+           chatservice::sendFrame(conn, buf);
 
            // 异步拉取并投递离线消息（不阻塞IO线程）
            int userId = id;
@@ -96,7 +110,7 @@ void chatservice::login(const TcpConnectionPtr &conn,const string &js, Timestamp
                    }
                    string buf;
                    fwd.SerializeToString(&buf);
-                   connPtr->send(buf);
+                   chatservice::sendFrame(connPtr, buf);
                }
                if (!offlineMsgs.empty())
                {
@@ -119,7 +133,7 @@ void chatservice::login(const TcpConnectionPtr &conn,const string &js, Timestamp
                WT_LOG_ERROR << "Serialization failed!";
                return ;
            }
-              conn->send(buf);
+              chatservice::sendFrame(conn, buf);
         }
 }
 
@@ -150,7 +164,7 @@ void chatservice::reg(const TcpConnectionPtr &conn, const string &js, Timestamp 
         response.set_payload(registerResponse.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
-        conn->send(buf);
+        chatservice::sendFrame(conn, buf);
         return;
     }
 
@@ -197,7 +211,7 @@ void chatservice::reg(const TcpConnectionPtr &conn, const string &js, Timestamp 
         string buf;
         response.SerializeToString(&buf);
         loop->runInLoop([conn, buf]() {
-            conn->send(buf);
+            chatservice::sendFrame(conn, buf);
         });
     });
 }
@@ -263,7 +277,7 @@ void chatservice::oneChat(const TcpConnectionPtr &conn, const string &js, Timest
         fwd.set_payload(req.SerializeAsString());
         string fwdBuf;
         fwd.SerializeToString(&fwdBuf);
-        toConn->send(fwdBuf);
+        chatservice::sendFrame(toConn, fwdBuf);
 
         chat::BaseMessage response;
         response.set_type(chat::ONE_CHAT_MSG_ACK);
@@ -273,7 +287,7 @@ void chatservice::oneChat(const TcpConnectionPtr &conn, const string &js, Timest
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
-        conn->send(buf);
+        chatservice::sendFrame(conn, buf);
         return;
     }
 
@@ -297,7 +311,7 @@ void chatservice::oneChat(const TcpConnectionPtr &conn, const string &js, Timest
             response.set_payload(ack.SerializeAsString());
             string buf;
             response.SerializeToString(&buf);
-            conn->send(buf);
+            chatservice::sendFrame(conn, buf);
         }
         else
         {
@@ -311,7 +325,7 @@ void chatservice::oneChat(const TcpConnectionPtr &conn, const string &js, Timest
             response.set_payload(ack.SerializeAsString());
             string buf;
             response.SerializeToString(&buf);
-            conn->send(buf);
+            chatservice::sendFrame(conn, buf);
         }
     });
 }
@@ -354,7 +368,7 @@ void chatservice::addFriend(const TcpConnectionPtr &conn, const string &js, Time
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
-        conn->send(buf);
+        chatservice::sendFrame(conn, buf);
     });
 }
 
@@ -390,7 +404,7 @@ void chatservice::delFriend(const TcpConnectionPtr &conn, const string &js, Time
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
-        conn->send(buf);
+        chatservice::sendFrame(conn, buf);
     });
 }
 
@@ -432,7 +446,7 @@ void chatservice::createGroup(const TcpConnectionPtr &conn, const string &js, Ti
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
-        conn->send(buf);
+        chatservice::sendFrame(conn, buf);
     });
 }
 
@@ -483,7 +497,7 @@ void chatservice::addGroup(const TcpConnectionPtr &conn, const string &js, Times
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
-        conn->send(buf);
+        chatservice::sendFrame(conn, buf);
     });
 }
 
@@ -519,7 +533,7 @@ void chatservice::quitGroup(const TcpConnectionPtr &conn, const string &js, Time
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
-        conn->send(buf);
+        chatservice::sendFrame(conn, buf);
     });
 }
 
@@ -550,7 +564,7 @@ void chatservice::groupChat(const TcpConnectionPtr &conn, const string &js, Time
             response.set_payload(ack.SerializeAsString());
             string buf;
             response.SerializeToString(&buf);
-            conn->send(buf);
+            chatservice::sendFrame(conn, buf);
             return;
         }
 
@@ -588,7 +602,7 @@ void chatservice::groupChat(const TcpConnectionPtr &conn, const string &js, Time
         // 转发给本节点在线成员
         for (const auto &c : localOnlineConns)
         {
-            c->send(fwdBuf);
+            chatservice::sendFrame(c, fwdBuf);
         }
 
         // 对本节点未命中的成员，查Redis全局在线SET决定PUBLISH或存储离线
@@ -623,7 +637,7 @@ void chatservice::groupChat(const TcpConnectionPtr &conn, const string &js, Time
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
-        conn->send(buf);
+        chatservice::sendFrame(conn, buf);
     });
 }
 
@@ -694,7 +708,7 @@ void chatservice::initRedis()
             fwd.set_payload(crossMsg.payload());
             string fwdBuf;
             fwd.SerializeToString(&fwdBuf);
-            toConn->send(fwdBuf);
+            chatservice::sendFrame(toConn, fwdBuf);
             WT_LOG_INFO << "Cross-node message forwarded to local user " << targetUserId;
         }
         // 未命中说明用户不在此节点，忽略（其他节点会处理）

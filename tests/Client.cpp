@@ -47,44 +47,78 @@ int connectToServer(const string &ip, int port)
     return sockfd;
 }
 
+// 发送一条带4字节长度前缀的 BaseMessage
+bool sendFrame(int sockfd, const chat::BaseMessage &msg)
+{
+    string payload;
+    if (!msg.SerializeToString(&payload)) return false;
+    int32_t be32 = htonl(static_cast<int32_t>(payload.size()));
+    string frame(reinterpret_cast<const char*>(&be32), sizeof(be32));
+    frame += payload;
+    int total = 0;
+    while (total < (int)frame.size())
+    {
+        int n = send(sockfd, frame.data() + total, frame.size() - total, MSG_NOSIGNAL);
+        if (n <= 0) return false;
+        total += n;
+    }
+    return true;
+}
+
+// 从socket读取一帧（4字节长度+payload），解析为 BaseMessage
+bool recvFrame(int sockfd, chat::BaseMessage &response, int timeout_sec = 5)
+{
+    // 读4字节长度前缀
+    int32_t be32 = 0;
+    int got = 0;
+    while (got < (int)sizeof(be32))
+    {
+        fd_set readfds;
+        struct timeval tv;
+        tv.tv_sec = timeout_sec;
+        tv.tv_usec = 0;
+        FD_ZERO(&readfds);
+        FD_SET(sockfd, &readfds);
+        int rv = select(sockfd + 1, &readfds, nullptr, nullptr, &tv);
+        if (rv <= 0) return false;
+        int n = recv(sockfd, reinterpret_cast<char*>(&be32) + got, sizeof(be32) - got, 0);
+        if (n <= 0) return false;
+        got += n;
+    }
+    int32_t len = ntohl(be32);
+    if (len <= 0 || len > 16 * 1024 * 1024) return false;
+
+    // 读payload
+    string payload(len, '\0');
+    got = 0;
+    while (got < len)
+    {
+        fd_set readfds;
+        struct timeval tv;
+        tv.tv_sec = timeout_sec;
+        tv.tv_usec = 0;
+        FD_ZERO(&readfds);
+        FD_SET(sockfd, &readfds);
+        int rv = select(sockfd + 1, &readfds, nullptr, nullptr, &tv);
+        if (rv <= 0) return false;
+        int n = recv(sockfd, &payload[got], len - got, 0);
+        if (n <= 0) return false;
+        got += n;
+    }
+    return response.ParseFromString(payload);
+}
+
 // 发送一条 BaseMessage 并接收服务端响应
 bool sendAndRecv(int sockfd, const chat::BaseMessage &msg, chat::BaseMessage &response, int timeout_sec = 5)
 {
-    string buf;
-    if (!msg.SerializeToString(&buf)) return false;
-    int n = send(sockfd, buf.data(), buf.size(), MSG_NOSIGNAL);
-    if (n < 0) return false;
-
-    fd_set readfds;
-    struct timeval tv;
-    tv.tv_sec = timeout_sec;
-    tv.tv_usec = 0;
-    FD_ZERO(&readfds);
-    FD_SET(sockfd, &readfds);
-    int rv = select(sockfd + 1, &readfds, nullptr, nullptr, &tv);
-    if (rv <= 0) return false;
-
-    char rbuf[8192] = {0};
-    n = recv(sockfd, rbuf, sizeof(rbuf), 0);
-    if (n <= 0) return false;
-    return response.ParseFromArray(rbuf, n);
+    if (!sendFrame(sockfd, msg)) return false;
+    return recvFrame(sockfd, response, timeout_sec);
 }
 
 // 尝试接收额外消息（用于接收离线消息投递），无消息则超时返回false
 bool recvOptional(int sockfd, chat::BaseMessage &response, int timeout_sec = 2)
 {
-    fd_set readfds;
-    struct timeval tv;
-    tv.tv_sec = timeout_sec;
-    tv.tv_usec = 0;
-    FD_ZERO(&readfds);
-    FD_SET(sockfd, &readfds);
-    int rv = select(sockfd + 1, &readfds, nullptr, nullptr, &tv);
-    if (rv <= 0) return false;
-    char rbuf[8192] = {0};
-    int n = recv(sockfd, rbuf, sizeof(rbuf), 0);
-    if (n <= 0) return false;
-    return response.ParseFromArray(rbuf, n);
+    return recvFrame(sockfd, response, timeout_sec);
 }
 
 // 构造并发送指定类型的消息
@@ -259,20 +293,16 @@ bool testLoginOut(int sockfd, int userId)
     chat::LoginRequest req;
     req.set_id(userId);
 
-    // loginOut handler不回送ACK，构造消息后直接send即可
     chat::BaseMessage msg;
     msg.set_type(chat::LOGINOUT_MSG);
     msg.set_payload(req.SerializeAsString());
-    string buf;
-    msg.SerializeToString(&buf);
-    int n = send(sockfd, buf.data(), buf.size(), MSG_NOSIGNAL);
-    WT_LOG_INFO << "注销请求已发送, bytes=" << n;
-    return n > 0;
+    bool ok = sendFrame(sockfd, msg);
+    WT_LOG_INFO << "注销请求已发送, ok=" << ok;
+    return ok;
 }
 
 // 测试10：登录后接收离线消息
-// 注意：由于协议无消息分帧，多条离线消息可能合并在一个TCP段中，
-// ParseFromArray只能解析第一条。此处验证"至少收到1条"即表示离线投递功能正常。
+// 协议已加4字节长度前缀分帧，每条消息独立解析，不再有粘包问题。
 bool testReceiveOfflineMsgs(int sockfd, int minExpected)
 {
     WT_LOG_INFO << "===== [TEST] 接收离线消息, 期望至少 " << minExpected << " 条 =====";

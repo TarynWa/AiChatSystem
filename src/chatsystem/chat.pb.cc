@@ -40,6 +40,7 @@ PROTOBUF_CONSTEXPR LoginRequest::LoginRequest(
     /*decltype(_impl_.username_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.password_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.id_)*/int64_t{0}
+  , /*decltype(_impl_.last_ack_seq_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct LoginRequestDefaultTypeInternal {
   PROTOBUF_CONSTEXPR LoginRequestDefaultTypeInternal()
@@ -86,6 +87,8 @@ PROTOBUF_CONSTEXPR OneChatRequest::OneChatRequest(
   , /*decltype(_impl_.from_id_)*/int64_t{0}
   , /*decltype(_impl_.to_id_)*/int64_t{0}
   , /*decltype(_impl_.timestamp_)*/int64_t{0}
+  , /*decltype(_impl_.msg_id_)*/int64_t{0}
+  , /*decltype(_impl_.seq_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct OneChatRequestDefaultTypeInternal {
   PROTOBUF_CONSTEXPR OneChatRequestDefaultTypeInternal()
@@ -100,6 +103,8 @@ PROTOBUF_CONSTEXPR OneChatAck::OneChatAck(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.msg_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.code_)*/int64_t{0}
+  , /*decltype(_impl_.msg_id_)*/int64_t{0}
+  , /*decltype(_impl_.seq_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct OneChatAckDefaultTypeInternal {
   PROTOBUF_CONSTEXPR OneChatAckDefaultTypeInternal()
@@ -114,6 +119,8 @@ PROTOBUF_CONSTEXPR AddFriendRequest::AddFriendRequest(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.from_id_)*/int64_t{0}
   , /*decltype(_impl_.to_id_)*/int64_t{0}
+  , /*decltype(_impl_.msg_id_)*/int64_t{0}
+  , /*decltype(_impl_.seq_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct AddFriendRequestDefaultTypeInternal {
   PROTOBUF_CONSTEXPR AddFriendRequestDefaultTypeInternal()
@@ -128,6 +135,8 @@ PROTOBUF_CONSTEXPR AddFriendAck::AddFriendAck(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.msg_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.code_)*/int64_t{0}
+  , /*decltype(_impl_.msg_id_)*/int64_t{0}
+  , /*decltype(_impl_.seq_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct AddFriendAckDefaultTypeInternal {
   PROTOBUF_CONSTEXPR AddFriendAckDefaultTypeInternal()
@@ -142,6 +151,8 @@ PROTOBUF_CONSTEXPR DelFriendRequest::DelFriendRequest(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.from_id_)*/int64_t{0}
   , /*decltype(_impl_.to_id_)*/int64_t{0}
+  , /*decltype(_impl_.msg_id_)*/int64_t{0}
+  , /*decltype(_impl_.seq_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct DelFriendRequestDefaultTypeInternal {
   PROTOBUF_CONSTEXPR DelFriendRequestDefaultTypeInternal()
@@ -156,6 +167,8 @@ PROTOBUF_CONSTEXPR DelFriendAck::DelFriendAck(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.msg_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.code_)*/int64_t{0}
+  , /*decltype(_impl_.msg_id_)*/int64_t{0}
+  , /*decltype(_impl_.seq_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct DelFriendAckDefaultTypeInternal {
   PROTOBUF_CONSTEXPR DelFriendAckDefaultTypeInternal()
@@ -258,6 +271,8 @@ PROTOBUF_CONSTEXPR GroupChatRequest::GroupChatRequest(
   , /*decltype(_impl_.from_id_)*/int64_t{0}
   , /*decltype(_impl_.group_id_)*/int64_t{0}
   , /*decltype(_impl_.timestamp_)*/int64_t{0}
+  , /*decltype(_impl_.msg_id_)*/int64_t{0}
+  , /*decltype(_impl_.seq_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct GroupChatRequestDefaultTypeInternal {
   PROTOBUF_CONSTEXPR GroupChatRequestDefaultTypeInternal()
@@ -272,6 +287,8 @@ PROTOBUF_CONSTEXPR GroupChatAck::GroupChatAck(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.msg_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.code_)*/int64_t{0}
+  , /*decltype(_impl_.msg_id_)*/int64_t{0}
+  , /*decltype(_impl_.seq_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct GroupChatAckDefaultTypeInternal {
   PROTOBUF_CONSTEXPR GroupChatAckDefaultTypeInternal()
@@ -287,6 +304,9 @@ PROTOBUF_CONSTEXPR CrossNodeMsg::CrossNodeMsg(
     /*decltype(_impl_.payload_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.target_user_id_)*/int64_t{0}
   , /*decltype(_impl_.msg_type_)*/0
+  , /*decltype(_impl_.seq_)*/0
+  , /*decltype(_impl_.msg_id_)*/int64_t{0}
+  , /*decltype(_impl_.from_id_)*/int64_t{0}
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct CrossNodeMsgDefaultTypeInternal {
   PROTOBUF_CONSTEXPR CrossNodeMsgDefaultTypeInternal()
@@ -320,6 +340,7 @@ const uint32_t TableStruct_chat_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   PROTOBUF_FIELD_OFFSET(::chat::LoginRequest, _impl_.username_),
   PROTOBUF_FIELD_OFFSET(::chat::LoginRequest, _impl_.password_),
   PROTOBUF_FIELD_OFFSET(::chat::LoginRequest, _impl_.id_),
+  PROTOBUF_FIELD_OFFSET(::chat::LoginRequest, _impl_.last_ack_seq_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::chat::RegisterRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -348,6 +369,8 @@ const uint32_t TableStruct_chat_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   PROTOBUF_FIELD_OFFSET(::chat::OneChatRequest, _impl_.to_id_),
   PROTOBUF_FIELD_OFFSET(::chat::OneChatRequest, _impl_.content_),
   PROTOBUF_FIELD_OFFSET(::chat::OneChatRequest, _impl_.timestamp_),
+  PROTOBUF_FIELD_OFFSET(::chat::OneChatRequest, _impl_.msg_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::OneChatRequest, _impl_.seq_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::chat::OneChatAck, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -356,6 +379,8 @@ const uint32_t TableStruct_chat_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::chat::OneChatAck, _impl_.code_),
   PROTOBUF_FIELD_OFFSET(::chat::OneChatAck, _impl_.msg_),
+  PROTOBUF_FIELD_OFFSET(::chat::OneChatAck, _impl_.msg_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::OneChatAck, _impl_.seq_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::chat::AddFriendRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -364,6 +389,8 @@ const uint32_t TableStruct_chat_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::chat::AddFriendRequest, _impl_.from_id_),
   PROTOBUF_FIELD_OFFSET(::chat::AddFriendRequest, _impl_.to_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::AddFriendRequest, _impl_.msg_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::AddFriendRequest, _impl_.seq_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::chat::AddFriendAck, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -372,6 +399,8 @@ const uint32_t TableStruct_chat_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::chat::AddFriendAck, _impl_.code_),
   PROTOBUF_FIELD_OFFSET(::chat::AddFriendAck, _impl_.msg_),
+  PROTOBUF_FIELD_OFFSET(::chat::AddFriendAck, _impl_.msg_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::AddFriendAck, _impl_.seq_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::chat::DelFriendRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -380,6 +409,8 @@ const uint32_t TableStruct_chat_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::chat::DelFriendRequest, _impl_.from_id_),
   PROTOBUF_FIELD_OFFSET(::chat::DelFriendRequest, _impl_.to_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::DelFriendRequest, _impl_.msg_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::DelFriendRequest, _impl_.seq_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::chat::DelFriendAck, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -388,6 +419,8 @@ const uint32_t TableStruct_chat_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::chat::DelFriendAck, _impl_.code_),
   PROTOBUF_FIELD_OFFSET(::chat::DelFriendAck, _impl_.msg_),
+  PROTOBUF_FIELD_OFFSET(::chat::DelFriendAck, _impl_.msg_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::DelFriendAck, _impl_.seq_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::chat::CreateGroupRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -448,6 +481,8 @@ const uint32_t TableStruct_chat_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   PROTOBUF_FIELD_OFFSET(::chat::GroupChatRequest, _impl_.group_id_),
   PROTOBUF_FIELD_OFFSET(::chat::GroupChatRequest, _impl_.content_),
   PROTOBUF_FIELD_OFFSET(::chat::GroupChatRequest, _impl_.timestamp_),
+  PROTOBUF_FIELD_OFFSET(::chat::GroupChatRequest, _impl_.msg_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::GroupChatRequest, _impl_.seq_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::chat::GroupChatAck, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -456,6 +491,8 @@ const uint32_t TableStruct_chat_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::chat::GroupChatAck, _impl_.code_),
   PROTOBUF_FIELD_OFFSET(::chat::GroupChatAck, _impl_.msg_),
+  PROTOBUF_FIELD_OFFSET(::chat::GroupChatAck, _impl_.msg_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::GroupChatAck, _impl_.seq_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::chat::CrossNodeMsg, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -465,27 +502,30 @@ const uint32_t TableStruct_chat_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pro
   PROTOBUF_FIELD_OFFSET(::chat::CrossNodeMsg, _impl_.target_user_id_),
   PROTOBUF_FIELD_OFFSET(::chat::CrossNodeMsg, _impl_.msg_type_),
   PROTOBUF_FIELD_OFFSET(::chat::CrossNodeMsg, _impl_.payload_),
+  PROTOBUF_FIELD_OFFSET(::chat::CrossNodeMsg, _impl_.msg_id_),
+  PROTOBUF_FIELD_OFFSET(::chat::CrossNodeMsg, _impl_.seq_),
+  PROTOBUF_FIELD_OFFSET(::chat::CrossNodeMsg, _impl_.from_id_),
 };
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, -1, sizeof(::chat::BaseMessage)},
   { 8, -1, -1, sizeof(::chat::LoginRequest)},
-  { 17, -1, -1, sizeof(::chat::RegisterRequest)},
-  { 26, -1, -1, sizeof(::chat::RegisterResponse)},
-  { 35, -1, -1, sizeof(::chat::OneChatRequest)},
-  { 45, -1, -1, sizeof(::chat::OneChatAck)},
-  { 53, -1, -1, sizeof(::chat::AddFriendRequest)},
-  { 61, -1, -1, sizeof(::chat::AddFriendAck)},
-  { 69, -1, -1, sizeof(::chat::DelFriendRequest)},
-  { 77, -1, -1, sizeof(::chat::DelFriendAck)},
-  { 85, -1, -1, sizeof(::chat::CreateGroupRequest)},
-  { 94, -1, -1, sizeof(::chat::CreateGroupAck)},
-  { 103, -1, -1, sizeof(::chat::AddGroupRequest)},
-  { 111, -1, -1, sizeof(::chat::AddGroupAck)},
-  { 119, -1, -1, sizeof(::chat::QuitGroupRequest)},
-  { 127, -1, -1, sizeof(::chat::QuitGroupAck)},
-  { 135, -1, -1, sizeof(::chat::GroupChatRequest)},
-  { 145, -1, -1, sizeof(::chat::GroupChatAck)},
-  { 153, -1, -1, sizeof(::chat::CrossNodeMsg)},
+  { 18, -1, -1, sizeof(::chat::RegisterRequest)},
+  { 27, -1, -1, sizeof(::chat::RegisterResponse)},
+  { 36, -1, -1, sizeof(::chat::OneChatRequest)},
+  { 48, -1, -1, sizeof(::chat::OneChatAck)},
+  { 58, -1, -1, sizeof(::chat::AddFriendRequest)},
+  { 68, -1, -1, sizeof(::chat::AddFriendAck)},
+  { 78, -1, -1, sizeof(::chat::DelFriendRequest)},
+  { 88, -1, -1, sizeof(::chat::DelFriendAck)},
+  { 98, -1, -1, sizeof(::chat::CreateGroupRequest)},
+  { 107, -1, -1, sizeof(::chat::CreateGroupAck)},
+  { 116, -1, -1, sizeof(::chat::AddGroupRequest)},
+  { 124, -1, -1, sizeof(::chat::AddGroupAck)},
+  { 132, -1, -1, sizeof(::chat::QuitGroupRequest)},
+  { 140, -1, -1, sizeof(::chat::QuitGroupAck)},
+  { 148, -1, -1, sizeof(::chat::GroupChatRequest)},
+  { 160, -1, -1, sizeof(::chat::GroupChatAck)},
+  { 170, -1, -1, sizeof(::chat::CrossNodeMsg)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -513,48 +553,56 @@ static const ::_pb::Message* const file_default_instances[] = {
 const char descriptor_table_protodef_chat_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\nchat.proto\022\004chat\"=\n\013BaseMessage\022\035\n\004typ"
   "e\030\001 \001(\0162\017.chat.EnMsgType\022\017\n\007payload\030\002 \001("
-  "\014\">\n\014LoginRequest\022\020\n\010username\030\001 \001(\t\022\020\n\010p"
-  "assword\030\002 \001(\t\022\n\n\002id\030\003 \001(\003\"A\n\017RegisterReq"
-  "uest\022\020\n\010username\030\001 \001(\t\022\020\n\010password\030\002 \001(\t"
-  "\022\n\n\002id\030\003 \001(\003\"9\n\020RegisterResponse\022\014\n\004code"
-  "\030\001 \001(\003\022\013\n\003msg\030\002 \001(\t\022\n\n\002id\030\003 \001(\003\"T\n\016OneCh"
-  "atRequest\022\017\n\007from_id\030\001 \001(\003\022\r\n\005to_id\030\002 \001("
-  "\003\022\017\n\007content\030\003 \001(\t\022\021\n\ttimestamp\030\004 \001(\003\"\'\n"
-  "\nOneChatAck\022\014\n\004code\030\001 \001(\003\022\013\n\003msg\030\002 \001(\t\"2"
+  "\014\"T\n\014LoginRequest\022\020\n\010username\030\001 \001(\t\022\020\n\010p"
+  "assword\030\002 \001(\t\022\n\n\002id\030\003 \001(\003\022\024\n\014last_ack_se"
+  "q\030\004 \001(\005\"A\n\017RegisterRequest\022\020\n\010username\030\001"
+  " \001(\t\022\020\n\010password\030\002 \001(\t\022\n\n\002id\030\003 \001(\003\"9\n\020Re"
+  "gisterResponse\022\014\n\004code\030\001 \001(\003\022\013\n\003msg\030\002 \001("
+  "\t\022\n\n\002id\030\003 \001(\003\"q\n\016OneChatRequest\022\017\n\007from_"
+  "id\030\001 \001(\003\022\r\n\005to_id\030\002 \001(\003\022\017\n\007content\030\003 \001(\t"
+  "\022\021\n\ttimestamp\030\004 \001(\003\022\016\n\006msg_id\030\005 \001(\003\022\013\n\003s"
+  "eq\030\006 \001(\005\"D\n\nOneChatAck\022\014\n\004code\030\001 \001(\003\022\013\n\003"
+  "msg\030\002 \001(\t\022\016\n\006msg_id\030\003 \001(\003\022\013\n\003seq\030\004 \001(\005\"O"
   "\n\020AddFriendRequest\022\017\n\007from_id\030\001 \001(\003\022\r\n\005t"
-  "o_id\030\002 \001(\003\")\n\014AddFriendAck\022\014\n\004code\030\001 \001(\003"
-  "\022\013\n\003msg\030\002 \001(\t\"2\n\020DelFriendRequest\022\017\n\007fro"
-  "m_id\030\001 \001(\003\022\r\n\005to_id\030\002 \001(\003\")\n\014DelFriendAc"
-  "k\022\014\n\004code\030\001 \001(\003\022\013\n\003msg\030\002 \001(\t\"P\n\022CreateGr"
-  "oupRequest\022\022\n\ncreator_id\030\001 \001(\003\022\022\n\ngroup_"
-  "name\030\002 \001(\t\022\022\n\ngroup_desc\030\003 \001(\t\"=\n\016Create"
-  "GroupAck\022\014\n\004code\030\001 \001(\003\022\013\n\003msg\030\002 \001(\t\022\020\n\010g"
-  "roup_id\030\003 \001(\003\"4\n\017AddGroupRequest\022\017\n\007user"
-  "_id\030\001 \001(\003\022\020\n\010group_id\030\002 \001(\003\"(\n\013AddGroupA"
-  "ck\022\014\n\004code\030\001 \001(\003\022\013\n\003msg\030\002 \001(\t\"5\n\020QuitGro"
-  "upRequest\022\017\n\007user_id\030\001 \001(\003\022\020\n\010group_id\030\002"
-  " \001(\003\")\n\014QuitGroupAck\022\014\n\004code\030\001 \001(\003\022\013\n\003ms"
-  "g\030\002 \001(\t\"Y\n\020GroupChatRequest\022\017\n\007from_id\030\001"
-  " \001(\003\022\020\n\010group_id\030\002 \001(\003\022\017\n\007content\030\003 \001(\t\022"
-  "\021\n\ttimestamp\030\004 \001(\003\")\n\014GroupChatAck\022\014\n\004co"
-  "de\030\001 \001(\003\022\013\n\003msg\030\002 \001(\t\"I\n\014CrossNodeMsg\022\026\n"
-  "\016target_user_id\030\001 \001(\003\022\020\n\010msg_type\030\002 \001(\005\022"
-  "\017\n\007payload\030\003 \001(\t*\266\003\n\tEnMsgType\022\014\n\010MSG_NO"
-  "NE\020\000\022\r\n\tLOGIN_MSG\020\001\022\021\n\rLOGIN_MSG_ACK\020\002\022\020"
-  "\n\014LOGINOUT_MSG\020\003\022\013\n\007REG_MSG\020\004\022\017\n\013REG_MSG"
-  "_ACK\020\005\022\020\n\014ONE_CHAT_MSG\020\006\022\024\n\020ONE_CHAT_MSG"
-  "_ACK\020\007\022\022\n\016ADD_FRIEND_MSG\020\010\022\026\n\022ADD_FRIEND"
-  "_MSG_ACK\020\t\022\022\n\016DEL_FRIEND_MSG\020\n\022\026\n\022DEL_FR"
-  "IEND_MSG_ACK\020\013\022\024\n\020CREATE_GROUP_MSG\020\014\022\030\n\024"
-  "CREATE_GROUP_MSG_ACK\020\r\022\021\n\rADD_GROUP_MSG\020"
-  "\016\022\025\n\021ADD_GROUP_MSG_ACK\020\017\022\022\n\016QUIT_GROUP_M"
-  "SG\020\020\022\026\n\022QUIT_GROUP_MSG_ACK\020\021\022\022\n\016GROUP_CH"
-  "AT_MSG\020\022\022\026\n\022GROUP_CHAT_MSG_ACK\020\023\022\027\n\023CROS"
-  "S_NODE_CHAT_MSG\020\024b\006proto3"
+  "o_id\030\002 \001(\003\022\016\n\006msg_id\030\003 \001(\003\022\013\n\003seq\030\004 \001(\005\""
+  "F\n\014AddFriendAck\022\014\n\004code\030\001 \001(\003\022\013\n\003msg\030\002 \001"
+  "(\t\022\016\n\006msg_id\030\003 \001(\003\022\013\n\003seq\030\004 \001(\005\"O\n\020DelFr"
+  "iendRequest\022\017\n\007from_id\030\001 \001(\003\022\r\n\005to_id\030\002 "
+  "\001(\003\022\016\n\006msg_id\030\003 \001(\003\022\013\n\003seq\030\004 \001(\005\"F\n\014DelF"
+  "riendAck\022\014\n\004code\030\001 \001(\003\022\013\n\003msg\030\002 \001(\t\022\016\n\006m"
+  "sg_id\030\003 \001(\003\022\013\n\003seq\030\004 \001(\005\"P\n\022CreateGroupR"
+  "equest\022\022\n\ncreator_id\030\001 \001(\003\022\022\n\ngroup_name"
+  "\030\002 \001(\t\022\022\n\ngroup_desc\030\003 \001(\t\"=\n\016CreateGrou"
+  "pAck\022\014\n\004code\030\001 \001(\003\022\013\n\003msg\030\002 \001(\t\022\020\n\010group"
+  "_id\030\003 \001(\003\"4\n\017AddGroupRequest\022\017\n\007user_id\030"
+  "\001 \001(\003\022\020\n\010group_id\030\002 \001(\003\"(\n\013AddGroupAck\022\014"
+  "\n\004code\030\001 \001(\003\022\013\n\003msg\030\002 \001(\t\"5\n\020QuitGroupRe"
+  "quest\022\017\n\007user_id\030\001 \001(\003\022\020\n\010group_id\030\002 \001(\003"
+  "\")\n\014QuitGroupAck\022\014\n\004code\030\001 \001(\003\022\013\n\003msg\030\002 "
+  "\001(\t\"v\n\020GroupChatRequest\022\017\n\007from_id\030\001 \001(\003"
+  "\022\020\n\010group_id\030\002 \001(\003\022\017\n\007content\030\003 \001(\t\022\021\n\tt"
+  "imestamp\030\004 \001(\003\022\016\n\006msg_id\030\005 \001(\003\022\013\n\003seq\030\006 "
+  "\001(\005\"F\n\014GroupChatAck\022\014\n\004code\030\001 \001(\003\022\013\n\003msg"
+  "\030\002 \001(\t\022\016\n\006msg_id\030\003 \001(\003\022\013\n\003seq\030\004 \001(\005\"w\n\014C"
+  "rossNodeMsg\022\026\n\016target_user_id\030\001 \001(\003\022\020\n\010m"
+  "sg_type\030\002 \001(\005\022\017\n\007payload\030\003 \001(\t\022\016\n\006msg_id"
+  "\030\004 \001(\003\022\013\n\003seq\030\005 \001(\005\022\017\n\007from_id\030\006 \001(\003*\266\003\n"
+  "\tEnMsgType\022\014\n\010MSG_NONE\020\000\022\r\n\tLOGIN_MSG\020\001\022"
+  "\021\n\rLOGIN_MSG_ACK\020\002\022\020\n\014LOGINOUT_MSG\020\003\022\013\n\007"
+  "REG_MSG\020\004\022\017\n\013REG_MSG_ACK\020\005\022\020\n\014ONE_CHAT_M"
+  "SG\020\006\022\024\n\020ONE_CHAT_MSG_ACK\020\007\022\022\n\016ADD_FRIEND"
+  "_MSG\020\010\022\026\n\022ADD_FRIEND_MSG_ACK\020\t\022\022\n\016DEL_FR"
+  "IEND_MSG\020\n\022\026\n\022DEL_FRIEND_MSG_ACK\020\013\022\024\n\020CR"
+  "EATE_GROUP_MSG\020\014\022\030\n\024CREATE_GROUP_MSG_ACK"
+  "\020\r\022\021\n\rADD_GROUP_MSG\020\016\022\025\n\021ADD_GROUP_MSG_A"
+  "CK\020\017\022\022\n\016QUIT_GROUP_MSG\020\020\022\026\n\022QUIT_GROUP_M"
+  "SG_ACK\020\021\022\022\n\016GROUP_CHAT_MSG\020\022\022\026\n\022GROUP_CH"
+  "AT_MSG_ACK\020\023\022\027\n\023CROSS_NODE_CHAT_MSG\020\024b\006p"
+  "roto3"
   ;
 static ::_pbi::once_flag descriptor_table_chat_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_chat_2eproto = {
-    false, false, 1585, descriptor_table_protodef_chat_2eproto,
+    false, false, 1885, descriptor_table_protodef_chat_2eproto,
     "chat.proto",
     &descriptor_table_chat_2eproto_once, nullptr, 0, 19,
     schemas, file_default_instances, TableStruct_chat_2eproto::offsets,
@@ -849,6 +897,7 @@ LoginRequest::LoginRequest(const LoginRequest& from)
       decltype(_impl_.username_){}
     , decltype(_impl_.password_){}
     , decltype(_impl_.id_){}
+    , decltype(_impl_.last_ack_seq_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -868,7 +917,9 @@ LoginRequest::LoginRequest(const LoginRequest& from)
     _this->_impl_.password_.Set(from._internal_password(), 
       _this->GetArenaForAllocation());
   }
-  _this->_impl_.id_ = from._impl_.id_;
+  ::memcpy(&_impl_.id_, &from._impl_.id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.last_ack_seq_) -
+    reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.last_ack_seq_));
   // @@protoc_insertion_point(copy_constructor:chat.LoginRequest)
 }
 
@@ -880,6 +931,7 @@ inline void LoginRequest::SharedCtor(
       decltype(_impl_.username_){}
     , decltype(_impl_.password_){}
     , decltype(_impl_.id_){int64_t{0}}
+    , decltype(_impl_.last_ack_seq_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.username_.InitDefault();
@@ -919,7 +971,9 @@ void LoginRequest::Clear() {
 
   _impl_.username_.ClearToEmpty();
   _impl_.password_.ClearToEmpty();
-  _impl_.id_ = int64_t{0};
+  ::memset(&_impl_.id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.last_ack_seq_) -
+      reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.last_ack_seq_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -953,6 +1007,14 @@ const char* LoginRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* 
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
           _impl_.id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 last_ack_seq = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.last_ack_seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1012,6 +1074,12 @@ uint8_t* LoginRequest::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_id(), target);
   }
 
+  // int32 last_ack_seq = 4;
+  if (this->_internal_last_ack_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_last_ack_seq(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -1047,6 +1115,11 @@ size_t LoginRequest::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_id());
   }
 
+  // int32 last_ack_seq = 4;
+  if (this->_internal_last_ack_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_last_ack_seq());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -1073,6 +1146,9 @@ void LoginRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::P
   }
   if (from._internal_id() != 0) {
     _this->_internal_set_id(from._internal_id());
+  }
+  if (from._internal_last_ack_seq() != 0) {
+    _this->_internal_set_last_ack_seq(from._internal_last_ack_seq());
   }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -1101,7 +1177,12 @@ void LoginRequest::InternalSwap(LoginRequest* other) {
       &_impl_.password_, lhs_arena,
       &other->_impl_.password_, rhs_arena
   );
-  swap(_impl_.id_, other->_impl_.id_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(LoginRequest, _impl_.last_ack_seq_)
+      + sizeof(LoginRequest::_impl_.last_ack_seq_)
+      - PROTOBUF_FIELD_OFFSET(LoginRequest, _impl_.id_)>(
+          reinterpret_cast<char*>(&_impl_.id_),
+          reinterpret_cast<char*>(&other->_impl_.id_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata LoginRequest::GetMetadata() const {
@@ -1673,6 +1754,8 @@ OneChatRequest::OneChatRequest(const OneChatRequest& from)
     , decltype(_impl_.from_id_){}
     , decltype(_impl_.to_id_){}
     , decltype(_impl_.timestamp_){}
+    , decltype(_impl_.msg_id_){}
+    , decltype(_impl_.seq_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -1685,8 +1768,8 @@ OneChatRequest::OneChatRequest(const OneChatRequest& from)
       _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.from_id_, &from._impl_.from_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.timestamp_) -
-    reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.timestamp_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.seq_) -
+    reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.seq_));
   // @@protoc_insertion_point(copy_constructor:chat.OneChatRequest)
 }
 
@@ -1699,6 +1782,8 @@ inline void OneChatRequest::SharedCtor(
     , decltype(_impl_.from_id_){int64_t{0}}
     , decltype(_impl_.to_id_){int64_t{0}}
     , decltype(_impl_.timestamp_){int64_t{0}}
+    , decltype(_impl_.msg_id_){int64_t{0}}
+    , decltype(_impl_.seq_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.content_.InitDefault();
@@ -1733,8 +1818,8 @@ void OneChatRequest::Clear() {
 
   _impl_.content_.ClearToEmpty();
   ::memset(&_impl_.from_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.timestamp_) -
-      reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.timestamp_));
+      reinterpret_cast<char*>(&_impl_.seq_) -
+      reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.seq_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1774,6 +1859,22 @@ const char* OneChatRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
           _impl_.timestamp_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 msg_id = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          _impl_.msg_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 seq = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
+          _impl_.seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1835,6 +1936,18 @@ uint8_t* OneChatRequest::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt64ToArray(4, this->_internal_timestamp(), target);
   }
 
+  // int64 msg_id = 5;
+  if (this->_internal_msg_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(5, this->_internal_msg_id(), target);
+  }
+
+  // int32 seq = 6;
+  if (this->_internal_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(6, this->_internal_seq(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -1873,6 +1986,16 @@ size_t OneChatRequest::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_timestamp());
   }
 
+  // int64 msg_id = 5;
+  if (this->_internal_msg_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_msg_id());
+  }
+
+  // int32 seq = 6;
+  if (this->_internal_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_seq());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -1903,6 +2026,12 @@ void OneChatRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const :
   if (from._internal_timestamp() != 0) {
     _this->_internal_set_timestamp(from._internal_timestamp());
   }
+  if (from._internal_msg_id() != 0) {
+    _this->_internal_set_msg_id(from._internal_msg_id());
+  }
+  if (from._internal_seq() != 0) {
+    _this->_internal_set_seq(from._internal_seq());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -1927,8 +2056,8 @@ void OneChatRequest::InternalSwap(OneChatRequest* other) {
       &other->_impl_.content_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(OneChatRequest, _impl_.timestamp_)
-      + sizeof(OneChatRequest::_impl_.timestamp_)
+      PROTOBUF_FIELD_OFFSET(OneChatRequest, _impl_.seq_)
+      + sizeof(OneChatRequest::_impl_.seq_)
       - PROTOBUF_FIELD_OFFSET(OneChatRequest, _impl_.from_id_)>(
           reinterpret_cast<char*>(&_impl_.from_id_),
           reinterpret_cast<char*>(&other->_impl_.from_id_));
@@ -1958,6 +2087,8 @@ OneChatAck::OneChatAck(const OneChatAck& from)
   new (&_impl_) Impl_{
       decltype(_impl_.msg_){}
     , decltype(_impl_.code_){}
+    , decltype(_impl_.msg_id_){}
+    , decltype(_impl_.seq_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -1969,7 +2100,9 @@ OneChatAck::OneChatAck(const OneChatAck& from)
     _this->_impl_.msg_.Set(from._internal_msg(), 
       _this->GetArenaForAllocation());
   }
-  _this->_impl_.code_ = from._impl_.code_;
+  ::memcpy(&_impl_.code_, &from._impl_.code_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.seq_) -
+    reinterpret_cast<char*>(&_impl_.code_)) + sizeof(_impl_.seq_));
   // @@protoc_insertion_point(copy_constructor:chat.OneChatAck)
 }
 
@@ -1980,6 +2113,8 @@ inline void OneChatAck::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.msg_){}
     , decltype(_impl_.code_){int64_t{0}}
+    , decltype(_impl_.msg_id_){int64_t{0}}
+    , decltype(_impl_.seq_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.msg_.InitDefault();
@@ -2013,7 +2148,9 @@ void OneChatAck::Clear() {
   (void) cached_has_bits;
 
   _impl_.msg_.ClearToEmpty();
-  _impl_.code_ = int64_t{0};
+  ::memset(&_impl_.code_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.seq_) -
+      reinterpret_cast<char*>(&_impl_.code_)) + sizeof(_impl_.seq_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -2038,6 +2175,22 @@ const char* OneChatAck::_InternalParse(const char* ptr, ::_pbi::ParseContext* ct
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, "chat.OneChatAck.msg"));
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 msg_id = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.msg_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 seq = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
@@ -2086,6 +2239,18 @@ uint8_t* OneChatAck::_InternalSerialize(
         2, this->_internal_msg(), target);
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_msg_id(), target);
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_seq(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -2114,6 +2279,16 @@ size_t OneChatAck::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_code());
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_msg_id());
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_seq());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -2138,6 +2313,12 @@ void OneChatAck::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PRO
   if (from._internal_code() != 0) {
     _this->_internal_set_code(from._internal_code());
   }
+  if (from._internal_msg_id() != 0) {
+    _this->_internal_set_msg_id(from._internal_msg_id());
+  }
+  if (from._internal_seq() != 0) {
+    _this->_internal_set_seq(from._internal_seq());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -2161,7 +2342,12 @@ void OneChatAck::InternalSwap(OneChatAck* other) {
       &_impl_.msg_, lhs_arena,
       &other->_impl_.msg_, rhs_arena
   );
-  swap(_impl_.code_, other->_impl_.code_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(OneChatAck, _impl_.seq_)
+      + sizeof(OneChatAck::_impl_.seq_)
+      - PROTOBUF_FIELD_OFFSET(OneChatAck, _impl_.code_)>(
+          reinterpret_cast<char*>(&_impl_.code_),
+          reinterpret_cast<char*>(&other->_impl_.code_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata OneChatAck::GetMetadata() const {
@@ -2188,12 +2374,14 @@ AddFriendRequest::AddFriendRequest(const AddFriendRequest& from)
   new (&_impl_) Impl_{
       decltype(_impl_.from_id_){}
     , decltype(_impl_.to_id_){}
+    , decltype(_impl_.msg_id_){}
+    , decltype(_impl_.seq_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&_impl_.from_id_, &from._impl_.from_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.to_id_) -
-    reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.to_id_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.seq_) -
+    reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.seq_));
   // @@protoc_insertion_point(copy_constructor:chat.AddFriendRequest)
 }
 
@@ -2204,6 +2392,8 @@ inline void AddFriendRequest::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.from_id_){int64_t{0}}
     , decltype(_impl_.to_id_){int64_t{0}}
+    , decltype(_impl_.msg_id_){int64_t{0}}
+    , decltype(_impl_.seq_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -2232,8 +2422,8 @@ void AddFriendRequest::Clear() {
   (void) cached_has_bits;
 
   ::memset(&_impl_.from_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.to_id_) -
-      reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.to_id_));
+      reinterpret_cast<char*>(&_impl_.seq_) -
+      reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.seq_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -2255,6 +2445,22 @@ const char* AddFriendRequest::_InternalParse(const char* ptr, ::_pbi::ParseConte
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
           _impl_.to_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 msg_id = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.msg_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 seq = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -2300,6 +2506,18 @@ uint8_t* AddFriendRequest::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt64ToArray(2, this->_internal_to_id(), target);
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_msg_id(), target);
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_seq(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -2326,6 +2544,16 @@ size_t AddFriendRequest::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_to_id());
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_msg_id());
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_seq());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -2350,6 +2578,12 @@ void AddFriendRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const
   if (from._internal_to_id() != 0) {
     _this->_internal_set_to_id(from._internal_to_id());
   }
+  if (from._internal_msg_id() != 0) {
+    _this->_internal_set_msg_id(from._internal_msg_id());
+  }
+  if (from._internal_seq() != 0) {
+    _this->_internal_set_seq(from._internal_seq());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -2368,8 +2602,8 @@ void AddFriendRequest::InternalSwap(AddFriendRequest* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(AddFriendRequest, _impl_.to_id_)
-      + sizeof(AddFriendRequest::_impl_.to_id_)
+      PROTOBUF_FIELD_OFFSET(AddFriendRequest, _impl_.seq_)
+      + sizeof(AddFriendRequest::_impl_.seq_)
       - PROTOBUF_FIELD_OFFSET(AddFriendRequest, _impl_.from_id_)>(
           reinterpret_cast<char*>(&_impl_.from_id_),
           reinterpret_cast<char*>(&other->_impl_.from_id_));
@@ -2399,6 +2633,8 @@ AddFriendAck::AddFriendAck(const AddFriendAck& from)
   new (&_impl_) Impl_{
       decltype(_impl_.msg_){}
     , decltype(_impl_.code_){}
+    , decltype(_impl_.msg_id_){}
+    , decltype(_impl_.seq_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -2410,7 +2646,9 @@ AddFriendAck::AddFriendAck(const AddFriendAck& from)
     _this->_impl_.msg_.Set(from._internal_msg(), 
       _this->GetArenaForAllocation());
   }
-  _this->_impl_.code_ = from._impl_.code_;
+  ::memcpy(&_impl_.code_, &from._impl_.code_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.seq_) -
+    reinterpret_cast<char*>(&_impl_.code_)) + sizeof(_impl_.seq_));
   // @@protoc_insertion_point(copy_constructor:chat.AddFriendAck)
 }
 
@@ -2421,6 +2659,8 @@ inline void AddFriendAck::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.msg_){}
     , decltype(_impl_.code_){int64_t{0}}
+    , decltype(_impl_.msg_id_){int64_t{0}}
+    , decltype(_impl_.seq_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.msg_.InitDefault();
@@ -2454,7 +2694,9 @@ void AddFriendAck::Clear() {
   (void) cached_has_bits;
 
   _impl_.msg_.ClearToEmpty();
-  _impl_.code_ = int64_t{0};
+  ::memset(&_impl_.code_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.seq_) -
+      reinterpret_cast<char*>(&_impl_.code_)) + sizeof(_impl_.seq_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -2479,6 +2721,22 @@ const char* AddFriendAck::_InternalParse(const char* ptr, ::_pbi::ParseContext* 
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, "chat.AddFriendAck.msg"));
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 msg_id = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.msg_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 seq = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
@@ -2527,6 +2785,18 @@ uint8_t* AddFriendAck::_InternalSerialize(
         2, this->_internal_msg(), target);
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_msg_id(), target);
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_seq(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -2555,6 +2825,16 @@ size_t AddFriendAck::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_code());
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_msg_id());
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_seq());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -2579,6 +2859,12 @@ void AddFriendAck::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::P
   if (from._internal_code() != 0) {
     _this->_internal_set_code(from._internal_code());
   }
+  if (from._internal_msg_id() != 0) {
+    _this->_internal_set_msg_id(from._internal_msg_id());
+  }
+  if (from._internal_seq() != 0) {
+    _this->_internal_set_seq(from._internal_seq());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -2602,7 +2888,12 @@ void AddFriendAck::InternalSwap(AddFriendAck* other) {
       &_impl_.msg_, lhs_arena,
       &other->_impl_.msg_, rhs_arena
   );
-  swap(_impl_.code_, other->_impl_.code_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(AddFriendAck, _impl_.seq_)
+      + sizeof(AddFriendAck::_impl_.seq_)
+      - PROTOBUF_FIELD_OFFSET(AddFriendAck, _impl_.code_)>(
+          reinterpret_cast<char*>(&_impl_.code_),
+          reinterpret_cast<char*>(&other->_impl_.code_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata AddFriendAck::GetMetadata() const {
@@ -2629,12 +2920,14 @@ DelFriendRequest::DelFriendRequest(const DelFriendRequest& from)
   new (&_impl_) Impl_{
       decltype(_impl_.from_id_){}
     , decltype(_impl_.to_id_){}
+    , decltype(_impl_.msg_id_){}
+    , decltype(_impl_.seq_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::memcpy(&_impl_.from_id_, &from._impl_.from_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.to_id_) -
-    reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.to_id_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.seq_) -
+    reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.seq_));
   // @@protoc_insertion_point(copy_constructor:chat.DelFriendRequest)
 }
 
@@ -2645,6 +2938,8 @@ inline void DelFriendRequest::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.from_id_){int64_t{0}}
     , decltype(_impl_.to_id_){int64_t{0}}
+    , decltype(_impl_.msg_id_){int64_t{0}}
+    , decltype(_impl_.seq_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -2673,8 +2968,8 @@ void DelFriendRequest::Clear() {
   (void) cached_has_bits;
 
   ::memset(&_impl_.from_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.to_id_) -
-      reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.to_id_));
+      reinterpret_cast<char*>(&_impl_.seq_) -
+      reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.seq_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -2696,6 +2991,22 @@ const char* DelFriendRequest::_InternalParse(const char* ptr, ::_pbi::ParseConte
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
           _impl_.to_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 msg_id = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.msg_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 seq = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -2741,6 +3052,18 @@ uint8_t* DelFriendRequest::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt64ToArray(2, this->_internal_to_id(), target);
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_msg_id(), target);
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_seq(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -2767,6 +3090,16 @@ size_t DelFriendRequest::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_to_id());
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_msg_id());
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_seq());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -2791,6 +3124,12 @@ void DelFriendRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const
   if (from._internal_to_id() != 0) {
     _this->_internal_set_to_id(from._internal_to_id());
   }
+  if (from._internal_msg_id() != 0) {
+    _this->_internal_set_msg_id(from._internal_msg_id());
+  }
+  if (from._internal_seq() != 0) {
+    _this->_internal_set_seq(from._internal_seq());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -2809,8 +3148,8 @@ void DelFriendRequest::InternalSwap(DelFriendRequest* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(DelFriendRequest, _impl_.to_id_)
-      + sizeof(DelFriendRequest::_impl_.to_id_)
+      PROTOBUF_FIELD_OFFSET(DelFriendRequest, _impl_.seq_)
+      + sizeof(DelFriendRequest::_impl_.seq_)
       - PROTOBUF_FIELD_OFFSET(DelFriendRequest, _impl_.from_id_)>(
           reinterpret_cast<char*>(&_impl_.from_id_),
           reinterpret_cast<char*>(&other->_impl_.from_id_));
@@ -2840,6 +3179,8 @@ DelFriendAck::DelFriendAck(const DelFriendAck& from)
   new (&_impl_) Impl_{
       decltype(_impl_.msg_){}
     , decltype(_impl_.code_){}
+    , decltype(_impl_.msg_id_){}
+    , decltype(_impl_.seq_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -2851,7 +3192,9 @@ DelFriendAck::DelFriendAck(const DelFriendAck& from)
     _this->_impl_.msg_.Set(from._internal_msg(), 
       _this->GetArenaForAllocation());
   }
-  _this->_impl_.code_ = from._impl_.code_;
+  ::memcpy(&_impl_.code_, &from._impl_.code_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.seq_) -
+    reinterpret_cast<char*>(&_impl_.code_)) + sizeof(_impl_.seq_));
   // @@protoc_insertion_point(copy_constructor:chat.DelFriendAck)
 }
 
@@ -2862,6 +3205,8 @@ inline void DelFriendAck::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.msg_){}
     , decltype(_impl_.code_){int64_t{0}}
+    , decltype(_impl_.msg_id_){int64_t{0}}
+    , decltype(_impl_.seq_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.msg_.InitDefault();
@@ -2895,7 +3240,9 @@ void DelFriendAck::Clear() {
   (void) cached_has_bits;
 
   _impl_.msg_.ClearToEmpty();
-  _impl_.code_ = int64_t{0};
+  ::memset(&_impl_.code_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.seq_) -
+      reinterpret_cast<char*>(&_impl_.code_)) + sizeof(_impl_.seq_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -2920,6 +3267,22 @@ const char* DelFriendAck::_InternalParse(const char* ptr, ::_pbi::ParseContext* 
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, "chat.DelFriendAck.msg"));
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 msg_id = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.msg_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 seq = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
@@ -2968,6 +3331,18 @@ uint8_t* DelFriendAck::_InternalSerialize(
         2, this->_internal_msg(), target);
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_msg_id(), target);
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_seq(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -2996,6 +3371,16 @@ size_t DelFriendAck::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_code());
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_msg_id());
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_seq());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -3020,6 +3405,12 @@ void DelFriendAck::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::P
   if (from._internal_code() != 0) {
     _this->_internal_set_code(from._internal_code());
   }
+  if (from._internal_msg_id() != 0) {
+    _this->_internal_set_msg_id(from._internal_msg_id());
+  }
+  if (from._internal_seq() != 0) {
+    _this->_internal_set_seq(from._internal_seq());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -3043,7 +3434,12 @@ void DelFriendAck::InternalSwap(DelFriendAck* other) {
       &_impl_.msg_, lhs_arena,
       &other->_impl_.msg_, rhs_arena
   );
-  swap(_impl_.code_, other->_impl_.code_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(DelFriendAck, _impl_.seq_)
+      + sizeof(DelFriendAck::_impl_.seq_)
+      - PROTOBUF_FIELD_OFFSET(DelFriendAck, _impl_.code_)>(
+          reinterpret_cast<char*>(&_impl_.code_),
+          reinterpret_cast<char*>(&other->_impl_.code_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata DelFriendAck::GetMetadata() const {
@@ -4497,6 +4893,8 @@ GroupChatRequest::GroupChatRequest(const GroupChatRequest& from)
     , decltype(_impl_.from_id_){}
     , decltype(_impl_.group_id_){}
     , decltype(_impl_.timestamp_){}
+    , decltype(_impl_.msg_id_){}
+    , decltype(_impl_.seq_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -4509,8 +4907,8 @@ GroupChatRequest::GroupChatRequest(const GroupChatRequest& from)
       _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.from_id_, &from._impl_.from_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.timestamp_) -
-    reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.timestamp_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.seq_) -
+    reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.seq_));
   // @@protoc_insertion_point(copy_constructor:chat.GroupChatRequest)
 }
 
@@ -4523,6 +4921,8 @@ inline void GroupChatRequest::SharedCtor(
     , decltype(_impl_.from_id_){int64_t{0}}
     , decltype(_impl_.group_id_){int64_t{0}}
     , decltype(_impl_.timestamp_){int64_t{0}}
+    , decltype(_impl_.msg_id_){int64_t{0}}
+    , decltype(_impl_.seq_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.content_.InitDefault();
@@ -4557,8 +4957,8 @@ void GroupChatRequest::Clear() {
 
   _impl_.content_.ClearToEmpty();
   ::memset(&_impl_.from_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.timestamp_) -
-      reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.timestamp_));
+      reinterpret_cast<char*>(&_impl_.seq_) -
+      reinterpret_cast<char*>(&_impl_.from_id_)) + sizeof(_impl_.seq_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -4598,6 +4998,22 @@ const char* GroupChatRequest::_InternalParse(const char* ptr, ::_pbi::ParseConte
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
           _impl_.timestamp_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 msg_id = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          _impl_.msg_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 seq = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
+          _impl_.seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -4659,6 +5075,18 @@ uint8_t* GroupChatRequest::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt64ToArray(4, this->_internal_timestamp(), target);
   }
 
+  // int64 msg_id = 5;
+  if (this->_internal_msg_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(5, this->_internal_msg_id(), target);
+  }
+
+  // int32 seq = 6;
+  if (this->_internal_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(6, this->_internal_seq(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -4697,6 +5125,16 @@ size_t GroupChatRequest::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_timestamp());
   }
 
+  // int64 msg_id = 5;
+  if (this->_internal_msg_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_msg_id());
+  }
+
+  // int32 seq = 6;
+  if (this->_internal_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_seq());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -4727,6 +5165,12 @@ void GroupChatRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const
   if (from._internal_timestamp() != 0) {
     _this->_internal_set_timestamp(from._internal_timestamp());
   }
+  if (from._internal_msg_id() != 0) {
+    _this->_internal_set_msg_id(from._internal_msg_id());
+  }
+  if (from._internal_seq() != 0) {
+    _this->_internal_set_seq(from._internal_seq());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -4751,8 +5195,8 @@ void GroupChatRequest::InternalSwap(GroupChatRequest* other) {
       &other->_impl_.content_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(GroupChatRequest, _impl_.timestamp_)
-      + sizeof(GroupChatRequest::_impl_.timestamp_)
+      PROTOBUF_FIELD_OFFSET(GroupChatRequest, _impl_.seq_)
+      + sizeof(GroupChatRequest::_impl_.seq_)
       - PROTOBUF_FIELD_OFFSET(GroupChatRequest, _impl_.from_id_)>(
           reinterpret_cast<char*>(&_impl_.from_id_),
           reinterpret_cast<char*>(&other->_impl_.from_id_));
@@ -4782,6 +5226,8 @@ GroupChatAck::GroupChatAck(const GroupChatAck& from)
   new (&_impl_) Impl_{
       decltype(_impl_.msg_){}
     , decltype(_impl_.code_){}
+    , decltype(_impl_.msg_id_){}
+    , decltype(_impl_.seq_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -4793,7 +5239,9 @@ GroupChatAck::GroupChatAck(const GroupChatAck& from)
     _this->_impl_.msg_.Set(from._internal_msg(), 
       _this->GetArenaForAllocation());
   }
-  _this->_impl_.code_ = from._impl_.code_;
+  ::memcpy(&_impl_.code_, &from._impl_.code_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.seq_) -
+    reinterpret_cast<char*>(&_impl_.code_)) + sizeof(_impl_.seq_));
   // @@protoc_insertion_point(copy_constructor:chat.GroupChatAck)
 }
 
@@ -4804,6 +5252,8 @@ inline void GroupChatAck::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.msg_){}
     , decltype(_impl_.code_){int64_t{0}}
+    , decltype(_impl_.msg_id_){int64_t{0}}
+    , decltype(_impl_.seq_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.msg_.InitDefault();
@@ -4837,7 +5287,9 @@ void GroupChatAck::Clear() {
   (void) cached_has_bits;
 
   _impl_.msg_.ClearToEmpty();
-  _impl_.code_ = int64_t{0};
+  ::memset(&_impl_.code_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.seq_) -
+      reinterpret_cast<char*>(&_impl_.code_)) + sizeof(_impl_.seq_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -4862,6 +5314,22 @@ const char* GroupChatAck::_InternalParse(const char* ptr, ::_pbi::ParseContext* 
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, "chat.GroupChatAck.msg"));
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 msg_id = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.msg_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 seq = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
@@ -4910,6 +5378,18 @@ uint8_t* GroupChatAck::_InternalSerialize(
         2, this->_internal_msg(), target);
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_msg_id(), target);
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_seq(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -4938,6 +5418,16 @@ size_t GroupChatAck::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_code());
   }
 
+  // int64 msg_id = 3;
+  if (this->_internal_msg_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_msg_id());
+  }
+
+  // int32 seq = 4;
+  if (this->_internal_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_seq());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -4962,6 +5452,12 @@ void GroupChatAck::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::P
   if (from._internal_code() != 0) {
     _this->_internal_set_code(from._internal_code());
   }
+  if (from._internal_msg_id() != 0) {
+    _this->_internal_set_msg_id(from._internal_msg_id());
+  }
+  if (from._internal_seq() != 0) {
+    _this->_internal_set_seq(from._internal_seq());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -4985,7 +5481,12 @@ void GroupChatAck::InternalSwap(GroupChatAck* other) {
       &_impl_.msg_, lhs_arena,
       &other->_impl_.msg_, rhs_arena
   );
-  swap(_impl_.code_, other->_impl_.code_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(GroupChatAck, _impl_.seq_)
+      + sizeof(GroupChatAck::_impl_.seq_)
+      - PROTOBUF_FIELD_OFFSET(GroupChatAck, _impl_.code_)>(
+          reinterpret_cast<char*>(&_impl_.code_),
+          reinterpret_cast<char*>(&other->_impl_.code_));
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata GroupChatAck::GetMetadata() const {
@@ -5013,6 +5514,9 @@ CrossNodeMsg::CrossNodeMsg(const CrossNodeMsg& from)
       decltype(_impl_.payload_){}
     , decltype(_impl_.target_user_id_){}
     , decltype(_impl_.msg_type_){}
+    , decltype(_impl_.seq_){}
+    , decltype(_impl_.msg_id_){}
+    , decltype(_impl_.from_id_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -5025,8 +5529,8 @@ CrossNodeMsg::CrossNodeMsg(const CrossNodeMsg& from)
       _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.target_user_id_, &from._impl_.target_user_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.msg_type_) -
-    reinterpret_cast<char*>(&_impl_.target_user_id_)) + sizeof(_impl_.msg_type_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.from_id_) -
+    reinterpret_cast<char*>(&_impl_.target_user_id_)) + sizeof(_impl_.from_id_));
   // @@protoc_insertion_point(copy_constructor:chat.CrossNodeMsg)
 }
 
@@ -5038,6 +5542,9 @@ inline void CrossNodeMsg::SharedCtor(
       decltype(_impl_.payload_){}
     , decltype(_impl_.target_user_id_){int64_t{0}}
     , decltype(_impl_.msg_type_){0}
+    , decltype(_impl_.seq_){0}
+    , decltype(_impl_.msg_id_){int64_t{0}}
+    , decltype(_impl_.from_id_){int64_t{0}}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.payload_.InitDefault();
@@ -5072,8 +5579,8 @@ void CrossNodeMsg::Clear() {
 
   _impl_.payload_.ClearToEmpty();
   ::memset(&_impl_.target_user_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.msg_type_) -
-      reinterpret_cast<char*>(&_impl_.target_user_id_)) + sizeof(_impl_.msg_type_));
+      reinterpret_cast<char*>(&_impl_.from_id_) -
+      reinterpret_cast<char*>(&_impl_.target_user_id_)) + sizeof(_impl_.from_id_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -5106,6 +5613,30 @@ const char* CrossNodeMsg::_InternalParse(const char* ptr, ::_pbi::ParseContext* 
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, "chat.CrossNodeMsg.payload"));
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 msg_id = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.msg_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 seq = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          _impl_.seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int64 from_id = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
+          _impl_.from_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
@@ -5160,6 +5691,24 @@ uint8_t* CrossNodeMsg::_InternalSerialize(
         3, this->_internal_payload(), target);
   }
 
+  // int64 msg_id = 4;
+  if (this->_internal_msg_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(4, this->_internal_msg_id(), target);
+  }
+
+  // int32 seq = 5;
+  if (this->_internal_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(5, this->_internal_seq(), target);
+  }
+
+  // int64 from_id = 6;
+  if (this->_internal_from_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(6, this->_internal_from_id(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -5193,6 +5742,21 @@ size_t CrossNodeMsg::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_msg_type());
   }
 
+  // int32 seq = 5;
+  if (this->_internal_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_seq());
+  }
+
+  // int64 msg_id = 4;
+  if (this->_internal_msg_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_msg_id());
+  }
+
+  // int64 from_id = 6;
+  if (this->_internal_from_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_from_id());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -5220,6 +5784,15 @@ void CrossNodeMsg::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::P
   if (from._internal_msg_type() != 0) {
     _this->_internal_set_msg_type(from._internal_msg_type());
   }
+  if (from._internal_seq() != 0) {
+    _this->_internal_set_seq(from._internal_seq());
+  }
+  if (from._internal_msg_id() != 0) {
+    _this->_internal_set_msg_id(from._internal_msg_id());
+  }
+  if (from._internal_from_id() != 0) {
+    _this->_internal_set_from_id(from._internal_from_id());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -5244,8 +5817,8 @@ void CrossNodeMsg::InternalSwap(CrossNodeMsg* other) {
       &other->_impl_.payload_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(CrossNodeMsg, _impl_.msg_type_)
-      + sizeof(CrossNodeMsg::_impl_.msg_type_)
+      PROTOBUF_FIELD_OFFSET(CrossNodeMsg, _impl_.from_id_)
+      + sizeof(CrossNodeMsg::_impl_.from_id_)
       - PROTOBUF_FIELD_OFFSET(CrossNodeMsg, _impl_.target_user_id_)>(
           reinterpret_cast<char*>(&_impl_.target_user_id_),
           reinterpret_cast<char*>(&other->_impl_.target_user_id_));

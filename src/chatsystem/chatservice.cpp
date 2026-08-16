@@ -51,7 +51,9 @@ void chatservice::login(const TcpConnectionPtr &conn,const string &js, Timestamp
        string name = loginRequest.username();
        string password = loginRequest.password();
        int id = loginRequest.id();
-       WT_LOG_INFO<<"username:"<<name<<" password:"<<password;
+       // last_ack_seq：客户端告知服务端其最后确认收到的seq，用于过滤已投递的离线消息
+       int32_t lastAckSeq = loginRequest.last_ack_seq();
+       WT_LOG_INFO<<"username:"<<name<<" password:"<<password<<" last_ack_seq:"<<lastAckSeq;
        User _user = _userModel->query(id);
        // 密码校验：使用PwdUtils对客户端明文密码加盐哈希后与DB中存储的哈希值比较
        if(PwdUtils::verify(password, _user.getSalt(), _user.getPwd()) && _user.getName() == name){
@@ -73,6 +75,8 @@ void chatservice::login(const TcpConnectionPtr &conn,const string &js, Timestamp
            loginResponse.set_username(name);
            loginResponse.set_password(password);
            loginResponse.set_id(id);
+           // 回传 last_ack_seq 让客户端确认服务端已收到水位
+           loginResponse.set_last_ack_seq(lastAckSeq);
            response.set_payload(loginResponse.SerializeAsString());
            string buf;
            if (!response.SerializeToString(&buf))
@@ -83,12 +87,18 @@ void chatservice::login(const TcpConnectionPtr &conn,const string &js, Timestamp
            chatservice::sendFrame(conn, buf);
 
            // 异步拉取并投递离线消息（不阻塞IO线程）
+           // 改造点：投递时带上 msg_id/seq，让客户端能按 seq 重排
            int userId = id;
            TcpConnectionPtr connPtr = conn;
-           threadpool_.run([this, userId, connPtr]() {
+           threadpool_.run([this, userId, connPtr, lastAckSeq]() {
                vector<OfflineMsg> offlineMsgs = _offlineMsgModel->query(userId);
+               int delivered = 0;
                for (const auto &msg : offlineMsgs)
                {
+                   // 过滤已确认的旧消息（seq <= lastAckSeq 跳过，避免重复投递）
+                   if (msg.getSeq() > 0 && msg.getSeq() <= lastAckSeq)
+                       continue;
+
                    chat::BaseMessage fwd;
                    if (msg.getMsgType() == "private")
                    {
@@ -97,6 +107,8 @@ void chatservice::login(const TcpConnectionPtr &conn,const string &js, Timestamp
                        chatReq.set_from_id(msg.getFromId());
                        chatReq.set_to_id(userId);
                        chatReq.set_content(msg.getContent());
+                       chatReq.set_msg_id(msg.getMsgId());
+                       chatReq.set_seq(msg.getSeq());
                        fwd.set_payload(chatReq.SerializeAsString());
                    }
                    else // group
@@ -106,16 +118,21 @@ void chatservice::login(const TcpConnectionPtr &conn,const string &js, Timestamp
                        groupReq.set_from_id(msg.getFromId());
                        groupReq.set_group_id(0); // 离线群消息已不携带原群ID
                        groupReq.set_content(msg.getContent());
+                       groupReq.set_msg_id(msg.getMsgId());
+                       groupReq.set_seq(msg.getSeq());
                        fwd.set_payload(groupReq.SerializeAsString());
                    }
                    string buf;
                    fwd.SerializeToString(&buf);
                    chatservice::sendFrame(connPtr, buf);
+                   delivered++;
                }
                if (!offlineMsgs.empty())
                {
                    _offlineMsgModel->remove(userId);
-                   WT_LOG_INFO << "Delivered " << offlineMsgs.size() << " offline messages to user " << userId;
+                   WT_LOG_INFO << "Delivered " << delivered << "/" << offlineMsgs.size()
+                               << " offline messages to user " << userId
+                               << " (last_ack_seq=" << lastAckSeq << ")";
                }
            });
        }else{
@@ -245,6 +262,10 @@ void chatservice::clientCloseException(const TcpConnectionPtr &conn)
 }
 
 // 一对一私聊：本节点在线→直接转发；其他节点在线→Redis PUBLISH；全离线→MySQL存储
+// 改造点1：入口处 tryAcquireDedup，重复请求直接返回缓存的 ACK，避免重复处理
+// 改造点2：ACK 中回传 msg_id/seq，便于客户端推进 watermark
+// 改造点3：跨节点 PUBLISH 时携带 msg_id/seq/from_id，接收方直接转发不再次去重
+// 改造点4：离线存储带 msg_id/seq，DB 唯一索引 (from_id, msg_id) 作为最终防线
 void chatservice::oneChat(const TcpConnectionPtr &conn, const string &js, Timestamp time)
 {
     WT_LOG_INFO << "chatservice::oneChat() begin";
@@ -257,6 +278,37 @@ void chatservice::oneChat(const TcpConnectionPtr &conn, const string &js, Timest
     int fromId = req.from_id();
     int toId = req.to_id();
     string content = req.content();
+    int64_t msgId = req.msg_id();
+    int32_t seq = req.seq();
+
+    // ===== 幂等去重：跨节点共享 Redis SETNX =====
+    // 同一 (from_id, msg_id) 只会被一个节点成功处理；其他节点/重传直接命中缓存
+    if (msgId != 0 && !RedisMgr::instance()->tryAcquireDedup(fromId, msgId))
+    {
+        WT_LOG_INFO << "oneChat duplicate request from=" << fromId << " msg_id=" << msgId << ", return cached ack";
+        string cachedAck;
+        if (RedisMgr::instance()->getCachedAck(fromId, msgId, cachedAck))
+        {
+            chatservice::sendFrame(conn, cachedAck);
+        }
+        else
+        {
+            // 极端情况：dedup 标记已存在但 ACK 缓存尚未写入（前一个节点正在处理中）
+            // 返回默认成功 ACK，避免客户端无限重试
+            chat::BaseMessage response;
+            response.set_type(chat::ONE_CHAT_MSG_ACK);
+            chat::OneChatAck ack;
+            ack.set_code(0);
+            ack.set_msg("Duplicate (in-flight).");
+            ack.set_msg_id(msgId);
+            ack.set_seq(seq);
+            response.set_payload(ack.SerializeAsString());
+            string buf;
+            response.SerializeToString(&buf);
+            chatservice::sendFrame(conn, buf);
+        }
+        return;
+    }
 
     // 1. 查找接收方是否在本节点在线
     TcpConnectionPtr toConn;
@@ -271,7 +323,7 @@ void chatservice::oneChat(const TcpConnectionPtr &conn, const string &js, Timest
 
     if (toConn)
     {
-        // 本节点在线：直接转发
+        // 本节点在线：直接转发（带 msg_id/seq，接收方按 seq 重排）
         chat::BaseMessage fwd;
         fwd.set_type(chat::ONE_CHAT_MSG);
         fwd.set_payload(req.SerializeAsString());
@@ -284,22 +336,28 @@ void chatservice::oneChat(const TcpConnectionPtr &conn, const string &js, Timest
         chat::OneChatAck ack;
         ack.set_code(0);
         ack.set_msg("Message delivered.");
+        ack.set_msg_id(msgId);
+        ack.set_seq(seq);
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
         chatservice::sendFrame(conn, buf);
+        RedisMgr::instance()->cacheAck(fromId, msgId, buf);
         return;
     }
 
     // 2. 本节点未命中，异步查Redis全局在线SET + PUBLISH或存储离线
-    threadpool_.run([this, conn, toId, fromId, content, req]() {
+    threadpool_.run([this, conn, fromId, toId, content, msgId, seq, req]() {
         if (RedisMgr::instance()->isUserOnline(toId))
         {
-            // 用户在其他节点在线：PUBLISH跨节点消息
+            // 用户在其他节点在线：PUBLISH跨节点消息（携带 msg_id/seq/from_id 透传）
             chat::CrossNodeMsg crossMsg;
             crossMsg.set_target_user_id(toId);
             crossMsg.set_msg_type(chat::ONE_CHAT_MSG);
             crossMsg.set_payload(req.SerializeAsString());
+            crossMsg.set_msg_id(msgId);
+            crossMsg.set_seq(seq);
+            crossMsg.set_from_id(fromId);
             string crossData = crossMsg.SerializeAsString();
             RedisMgr::instance()->publish("chat:cross_node", crossData);
 
@@ -308,29 +366,36 @@ void chatservice::oneChat(const TcpConnectionPtr &conn, const string &js, Timest
             chat::OneChatAck ack;
             ack.set_code(0);
             ack.set_msg("Message forwarded to target node.");
+            ack.set_msg_id(msgId);
+            ack.set_seq(seq);
             response.set_payload(ack.SerializeAsString());
             string buf;
             response.SerializeToString(&buf);
             chatservice::sendFrame(conn, buf);
+            RedisMgr::instance()->cacheAck(fromId, msgId, buf);
         }
         else
         {
-            // 用户全离线：存储离线消息到MySQL
-            _offlineMsgModel->insert(toId, fromId, "private", content);
+            // 用户全离线：存储离线消息到MySQL（带 msg_id/seq，DB 唯一索引兜底防重）
+            _offlineMsgModel->insert(toId, fromId, "private", content, msgId, seq);
             chat::BaseMessage response;
             response.set_type(chat::ONE_CHAT_MSG_ACK);
             chat::OneChatAck ack;
             ack.set_code(0);
             ack.set_msg("Recipient offline, message stored.");
+            ack.set_msg_id(msgId);
+            ack.set_seq(seq);
             response.set_payload(ack.SerializeAsString());
             string buf;
             response.SerializeToString(&buf);
             chatservice::sendFrame(conn, buf);
+            RedisMgr::instance()->cacheAck(fromId, msgId, buf);
         }
     });
 }
 
 // 添加好友（异步DB操作）
+// 改造点：幂等去重 + ACK 回传 msg_id/seq
 void chatservice::addFriend(const TcpConnectionPtr &conn, const string &js, Timestamp time)
 {
     WT_LOG_INFO << "chatservice::addFriend() begin";
@@ -342,8 +407,22 @@ void chatservice::addFriend(const TcpConnectionPtr &conn, const string &js, Time
     }
     int fromId = req.from_id();
     int toId = req.to_id();
+    int64_t msgId = req.msg_id();
+    int32_t seq = req.seq();
 
-    threadpool_.run([this, conn, fromId, toId]() {
+    // 幂等去重
+    if (msgId != 0 && !RedisMgr::instance()->tryAcquireDedup(fromId, msgId))
+    {
+        WT_LOG_INFO << "addFriend duplicate request from=" << fromId << " msg_id=" << msgId;
+        string cachedAck;
+        if (RedisMgr::instance()->getCachedAck(fromId, msgId, cachedAck))
+        {
+            chatservice::sendFrame(conn, cachedAck);
+        }
+        return;
+    }
+
+    threadpool_.run([this, conn, fromId, toId, msgId, seq]() {
         chat::BaseMessage response;
         response.set_type(chat::ADD_FRIEND_MSG_ACK);
         chat::AddFriendAck ack;
@@ -364,15 +443,19 @@ void chatservice::addFriend(const TcpConnectionPtr &conn, const string &js, Time
             ack.set_code(2);
             ack.set_msg("Add friend failed, maybe already friends.");
         }
+        ack.set_msg_id(msgId);
+        ack.set_seq(seq);
 
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
         chatservice::sendFrame(conn, buf);
+        RedisMgr::instance()->cacheAck(fromId, msgId, buf);
     });
 }
 
 // 删除好友（异步DB操作）
+// 改造点：幂等去重 + ACK 回传 msg_id/seq
 void chatservice::delFriend(const TcpConnectionPtr &conn, const string &js, Timestamp time)
 {
     WT_LOG_INFO << "chatservice::delFriend() begin";
@@ -384,8 +467,22 @@ void chatservice::delFriend(const TcpConnectionPtr &conn, const string &js, Time
     }
     int fromId = req.from_id();
     int toId = req.to_id();
+    int64_t msgId = req.msg_id();
+    int32_t seq = req.seq();
 
-    threadpool_.run([this, conn, fromId, toId]() {
+    // 幂等去重
+    if (msgId != 0 && !RedisMgr::instance()->tryAcquireDedup(fromId, msgId))
+    {
+        WT_LOG_INFO << "delFriend duplicate request from=" << fromId << " msg_id=" << msgId;
+        string cachedAck;
+        if (RedisMgr::instance()->getCachedAck(fromId, msgId, cachedAck))
+        {
+            chatservice::sendFrame(conn, cachedAck);
+        }
+        return;
+    }
+
+    threadpool_.run([this, conn, fromId, toId, msgId, seq]() {
         chat::BaseMessage response;
         response.set_type(chat::DEL_FRIEND_MSG_ACK);
         chat::DelFriendAck ack;
@@ -400,11 +497,14 @@ void chatservice::delFriend(const TcpConnectionPtr &conn, const string &js, Time
             ack.set_code(1);
             ack.set_msg("Remove friend failed.");
         }
+        ack.set_msg_id(msgId);
+        ack.set_seq(seq);
 
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
         chatservice::sendFrame(conn, buf);
+        RedisMgr::instance()->cacheAck(fromId, msgId, buf);
     });
 }
 
@@ -538,6 +638,10 @@ void chatservice::quitGroup(const TcpConnectionPtr &conn, const string &js, Time
 }
 
 // 群聊：查询群成员→本节点在线转发/其他节点在线Redis PUBLISH/全离线MySQL存储
+// 改造点1：入口处幂等去重
+// 改造点2：跨节点 PUBLISH 携带 msg_id/seq/from_id
+// 改造点3：离线存储带 msg_id/seq
+// 改造点4：ACK 回传 msg_id/seq
 void chatservice::groupChat(const TcpConnectionPtr &conn, const string &js, Timestamp time)
 {
     WT_LOG_INFO << "chatservice::groupChat() begin";
@@ -550,9 +654,23 @@ void chatservice::groupChat(const TcpConnectionPtr &conn, const string &js, Time
     int fromId = req.from_id();
     int groupId = req.group_id();
     string content = req.content();
+    int64_t msgId = req.msg_id();
+    int32_t seq = req.seq();
+
+    // 幂等去重
+    if (msgId != 0 && !RedisMgr::instance()->tryAcquireDedup(fromId, msgId))
+    {
+        WT_LOG_INFO << "groupChat duplicate request from=" << fromId << " msg_id=" << msgId;
+        string cachedAck;
+        if (RedisMgr::instance()->getCachedAck(fromId, msgId, cachedAck))
+        {
+            chatservice::sendFrame(conn, cachedAck);
+        }
+        return;
+    }
 
     // 异步查询群成员并分发
-    threadpool_.run([this, conn, fromId, groupId, content, req]() {
+    threadpool_.run([this, conn, fromId, groupId, content, msgId, seq, req]() {
         vector<GroupUser> members = _groupModel->queryGroupMembers(groupId);
         if (members.empty())
         {
@@ -561,14 +679,17 @@ void chatservice::groupChat(const TcpConnectionPtr &conn, const string &js, Time
             chat::GroupChatAck ack;
             ack.set_code(1);
             ack.set_msg("Group not found or no members.");
+            ack.set_msg_id(msgId);
+            ack.set_seq(seq);
             response.set_payload(ack.SerializeAsString());
             string buf;
             response.SerializeToString(&buf);
             chatservice::sendFrame(conn, buf);
+            RedisMgr::instance()->cacheAck(fromId, msgId, buf);
             return;
         }
 
-        // 构造转发消息（原始GroupChatRequest）
+        // 构造转发消息（原始GroupChatRequest，已含 msg_id/seq）
         string reqPayload = req.SerializeAsString();
         chat::BaseMessage fwd;
         fwd.set_type(chat::GROUP_CHAT_MSG);
@@ -593,13 +714,12 @@ void chatservice::groupChat(const TcpConnectionPtr &conn, const string &js, Time
                 }
                 else
                 {
-                    // 本节点未命中，稍后查Redis判断是跨节点在线还是全离线
                     crossNodeUserIds.push_back(m.getId());
                 }
             }
         }
 
-        // 转发给本节点在线成员
+        // 转发给本节点在线成员（消息中已带 msg_id/seq，接收方按 seq 重排）
         for (const auto &c : localOnlineConns)
         {
             chatservice::sendFrame(c, fwdBuf);
@@ -610,18 +730,21 @@ void chatservice::groupChat(const TcpConnectionPtr &conn, const string &js, Time
         {
             if (RedisMgr::instance()->isUserOnline(uid))
             {
-                // 用户在其他节点在线：PUBLISH跨节点消息
+                // 用户在其他节点在线：PUBLISH跨节点消息（携带 msg_id/seq/from_id 透传）
                 chat::CrossNodeMsg crossMsg;
                 crossMsg.set_target_user_id(uid);
                 crossMsg.set_msg_type(chat::GROUP_CHAT_MSG);
                 crossMsg.set_payload(reqPayload);
+                crossMsg.set_msg_id(msgId);
+                crossMsg.set_seq(seq);
+                crossMsg.set_from_id(fromId);
                 string crossData = crossMsg.SerializeAsString();
                 RedisMgr::instance()->publish("chat:cross_node", crossData);
             }
             else
             {
-                // 全离线：存储离线消息到MySQL
-                _offlineMsgModel->insert(uid, fromId, "group", content);
+                // 全离线：存储离线消息到MySQL（带 msg_id/seq）
+                _offlineMsgModel->insert(uid, fromId, "group", content, msgId, seq);
                 offlineUserIds.push_back(uid);
             }
         }
@@ -634,10 +757,13 @@ void chatservice::groupChat(const TcpConnectionPtr &conn, const string &js, Time
         ack.set_msg("Group message sent. Local online: " + to_string(localOnlineConns.size()) +
                     ", Cross-node: " + to_string(crossNodeUserIds.size() - offlineUserIds.size()) +
                     ", Offline stored: " + to_string(offlineUserIds.size()));
+        ack.set_msg_id(msgId);
+        ack.set_seq(seq);
         response.set_payload(ack.SerializeAsString());
         string buf;
         response.SerializeToString(&buf);
         chatservice::sendFrame(conn, buf);
+        RedisMgr::instance()->cacheAck(fromId, msgId, buf);
     });
 }
 
@@ -670,6 +796,7 @@ void chatservice::loginOut(const TcpConnectionPtr &conn, const string &js, Times
 
 // 初始化Redis：连接 + 启动SUBSCRIBE线程
 // SUBSCRIBE线程收到跨节点消息后，查找target_user_id是否在本节点_userConnMap中，命中则转发
+// 改造点：跨节点消息已携带 msg_id/seq，接收节点直接转发（不再去重，去重已在原节点完成）
 void chatservice::initRedis()
 {
     if (!RedisMgr::instance()->connect("127.0.0.1", 6379))
@@ -703,13 +830,15 @@ void chatservice::initRedis()
         if (toConn)
         {
             // 目标用户在本节点在线：还原原始消息类型并转发
+            // 原始 payload 中已含 msg_id/seq，接收方按 seq 重排
             chat::BaseMessage fwd;
             fwd.set_type(static_cast<chat::EnMsgType>(crossMsg.msg_type()));
             fwd.set_payload(crossMsg.payload());
             string fwdBuf;
             fwd.SerializeToString(&fwdBuf);
             chatservice::sendFrame(toConn, fwdBuf);
-            WT_LOG_INFO << "Cross-node message forwarded to local user " << targetUserId;
+            WT_LOG_INFO << "Cross-node message forwarded to local user " << targetUserId
+                        << " msg_id=" << crossMsg.msg_id() << " seq=" << crossMsg.seq();
         }
         // 未命中说明用户不在此节点，忽略（其他节点会处理）
     });

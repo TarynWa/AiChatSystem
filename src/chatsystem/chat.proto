@@ -35,14 +35,16 @@ message BaseMessage {
     bytes payload = 2;
 }
 
-// 登录请求消息（既有，保持字段兼容）
+// 登录请求消息
+// last_ack_seq：客户端登录时回传最后已确认的seq，供服务端决定从何处开始投递离线消息
 message LoginRequest {
     string username = 1;
     string password = 2;
     int64 id = 3;
+    int32 last_ack_seq = 4;   // 客户端已确认的最大seq（断线重连同步水位）
 }
 
-// 注册请求消息（既有，保持字段兼容；id字段由服务端分配，客户端传入将被忽略）
+// 注册请求消息（id字段由服务端分配，客户端传入将被忽略）
 message RegisterRequest {
     string username = 1;
     string password = 2;
@@ -58,37 +60,51 @@ message RegisterResponse {
 }
 
 // ========== 一对一私聊 ==========
+// msg_id：客户端生成的全局唯一幂等键（雪花算法），用于服务端去重
+// seq：每发送方单调递增，接收方按seq重排，断线重连后不重置
 message OneChatRequest {
     int64 from_id = 1;          // 发送方用户ID
     int64 to_id = 2;            // 接收方用户ID
     string content = 3;         // 消息内容
     int64 timestamp = 4;        // 消息时间戳（毫秒）
+    int64 msg_id = 5;           // 幂等键：客户端生成的全局唯一ID
+    int32 seq = 6;              // 顺序键：每发送方单调递增
 }
 
 message OneChatAck {
     int64 code = 1;
     string msg = 2;
+    int64 msg_id = 3;           // 回传msg_id，便于客户端匹配ACK
+    int32 seq = 4;              // 回传seq，便于客户端推进watermark
 }
 
 // ========== 好友管理 ==========
 message AddFriendRequest {
     int64 from_id = 1;          // 发起方用户ID
     int64 to_id = 2;            // 被添加好友ID
+    int64 msg_id = 3;           // 幂等键
+    int32 seq = 4;              // 顺序键
 }
 
 message AddFriendAck {
     int64 code = 1;
     string msg = 2;
+    int64 msg_id = 3;
+    int32 seq = 4;
 }
 
 message DelFriendRequest {
     int64 from_id = 1;
     int64 to_id = 2;
+    int64 msg_id = 3;
+    int32 seq = 4;
 }
 
 message DelFriendAck {
     int64 code = 1;
     string msg = 2;
+    int64 msg_id = 3;
+    int32 seq = 4;
 }
 
 // ========== 群组管理 ==========
@@ -129,18 +145,26 @@ message GroupChatRequest {
     int64 group_id = 2;
     string content = 3;
     int64 timestamp = 4;
+    int64 msg_id = 5;           // 幂等键
+    int32 seq = 6;              // 顺序键
 }
 
 message GroupChatAck {
     int64 code = 1;
     string msg = 2;
+    int64 msg_id = 3;
+    int32 seq = 4;
 }
 
 // ========== 跨节点消息转发 ==========
 // Redis Pub/Sub传输载体，承载原始消息在节点间转发
 // 接收节点解析后查找target_user_id是否在本地_userConnMap中，命中则转发
+// msg_id/seq透传：跨节点转发也需保留幂等键与顺序键，确保多节点路径下端到端有序
 message CrossNodeMsg {
     int64 target_user_id = 1;   // 目标用户ID（接收节点在本地_userConnMap中查找）
     int32 msg_type = 2;          // 原始消息类型（ONE_CHAT_MSG / GROUP_CHAT_MSG）
     string payload = 3;         // 原始消息序列化字节
+    int64 msg_id = 4;           // 幂等键（用于跨节点去重）
+    int32 seq = 5;              // 顺序键（用于接收方重排）
+    int64 from_id = 6;          // 发送方ID（用于接收方维护per-sender seq）
 }

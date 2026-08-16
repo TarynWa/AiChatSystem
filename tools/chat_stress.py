@@ -98,44 +98,59 @@ def encode_register_request(username, password, new_id=0):
     return body
 
 
-def encode_login_request(username, password, uid=0):
-    """LOGIN_MSG (1) payload: LoginRequest { username=1, password=2, id=3 }"""
+def encode_login_request(username, password, uid=0, last_ack_seq=0):
+    """LOGIN_MSG (1) payload: LoginRequest { username=1, password=2, id=3, last_ack_seq=4 }"""
     body = (
         _field_length(1, username)
         + _field_length(2, password)
         + _field_varint(3, uid)
+        + _field_varint(4, last_ack_seq)
     )
     return body
 
 
-def encode_one_chat(from_id, to_id, content, ts=0):
-    """ONE_CHAT_MSG (6) payload: OneChatRequest {from=1,to=2,content=3,ts=4}"""
+def encode_one_chat(from_id, to_id, content, ts=0, msg_id=0, seq=0):
+    """ONE_CHAT_MSG (6) payload: OneChatRequest {from=1,to=2,content=3,ts=4,msg_id=5,seq=6}"""
     return (
         _field_varint(1, from_id)
         + _field_varint(2, to_id)
         + _field_length(3, content)
         + _field_varint(4, ts)
+        + _field_varint(5, msg_id)
+        + _field_varint(6, seq)
     )
 
 
-def encode_group_chat(from_id, group_id, content, ts=0):
-    """GROUP_CHAT_MSG (18) payload: GroupChatRequest {from=1,group=2,content=3,ts=4}"""
+def encode_group_chat(from_id, group_id, content, ts=0, msg_id=0, seq=0):
+    """GROUP_CHAT_MSG (18) payload: GroupChatRequest {from=1,group=2,content=3,ts=4,msg_id=5,seq=6}"""
     return (
         _field_varint(1, from_id)
         + _field_varint(2, group_id)
         + _field_length(3, content)
         + _field_varint(4, ts)
+        + _field_varint(5, msg_id)
+        + _field_varint(6, seq)
     )
 
 
-def encode_add_friend(from_id, to_id):
-    """ADD_FRIEND_MSG (8): AddFriendRequest {from=1, to=2}"""
-    return _field_varint(1, from_id) + _field_varint(2, to_id)
+def encode_add_friend(from_id, to_id, msg_id=0, seq=0):
+    """ADD_FRIEND_MSG (8): AddFriendRequest {from=1, to=2, msg_id=3, seq=4}"""
+    return (
+        _field_varint(1, from_id)
+        + _field_varint(2, to_id)
+        + _field_varint(3, msg_id)
+        + _field_varint(4, seq)
+    )
 
 
-def encode_del_friend(from_id, to_id):
-    """DEL_FRIEND_MSG (10): DelFriendRequest {from=1, to=2}"""
-    return _field_varint(1, from_id) + _field_varint(2, to_id)
+def encode_del_friend(from_id, to_id, msg_id=0, seq=0):
+    """DEL_FRIEND_MSG (10): DelFriendRequest {from=1, to=2, msg_id=3, seq=4}"""
+    return (
+        _field_varint(1, from_id)
+        + _field_varint(2, to_id)
+        + _field_varint(3, msg_id)
+        + _field_varint(4, seq)
+    )
 
 
 def encode_base_message(msg_type, payload):
@@ -292,6 +307,16 @@ class Tester:
     def __init__(self):
         self.registered = []  # [(uid, username, password)]
         self.base = None      # 注册/登录 socket（每次新建）
+        self._seq_counter = 0  # 功能测试也维护单调 seq
+        self._msg_id_counter = 0
+
+    def _next_msg_id_seq(self):
+        """生成下一组 (msg_id, seq)"""
+        self._seq_counter += 1
+        self._msg_id_counter += 1
+        # 功能测试固定 worker_index = 0x70000000，避免与压测 worker 冲突
+        msg_id = (0x70000000 << 32) | (self._msg_id_counter & 0xFFFFFFFF)
+        return msg_id, self._seq_counter
 
     def _new_sock(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -348,7 +373,8 @@ class Tester:
         return False, None, f"未找到 LOGIN_MSG_ACK，原始响应 {len(resp)} 字节"
 
     def one_chat(self, sock, from_id, to_id, content, wait_ack=True):
-        payload = encode_one_chat(from_id, to_id, content, int(time.time() * 1000))
+        msg_id, seq = self._next_msg_id_seq()
+        payload = encode_one_chat(from_id, to_id, content, int(time.time() * 1000), msg_id, seq)
         sock.sendall(encode_base_message(6, payload))
         if not wait_ack:
             return True, ""
@@ -364,7 +390,8 @@ class Tester:
         return True, "(无 ACK，发送已完成)"
 
     def group_chat(self, sock, from_id, group_id, content, wait_ack=True):
-        payload = encode_group_chat(from_id, group_id, content, int(time.time() * 1000))
+        msg_id, seq = self._next_msg_id_seq()
+        payload = encode_group_chat(from_id, group_id, content, int(time.time() * 1000), msg_id, seq)
         sock.sendall(encode_base_message(18, payload))
         if not wait_ack:
             return True, ""
@@ -379,7 +406,8 @@ class Tester:
         return True, "(无 ACK，发送已完成)"
 
     def add_friend(self, sock, from_id, to_id):
-        payload = encode_add_friend(from_id, to_id)
+        msg_id, seq = self._next_msg_id_seq()
+        payload = encode_add_friend(from_id, to_id, msg_id, seq)
         resp = send_and_recv(sock, 8, payload, timeout=8)
         for frame in try_split_multi(resp):
             tp, py = parse_base_message(frame)
@@ -391,7 +419,8 @@ class Tester:
         return False, "未找到 ADD_FRIEND_MSG_ACK"
 
     def del_friend(self, sock, from_id, to_id):
-        payload = encode_del_friend(from_id, to_id)
+        msg_id, seq = self._next_msg_id_seq()
+        payload = encode_del_friend(from_id, to_id, msg_id, seq)
         resp = send_and_recv(sock, 10, payload, timeout=8)
         for frame in try_split_multi(resp):
             tp, py = parse_base_message(frame)
@@ -505,13 +534,24 @@ class StressWorker:
         self.username = username
         self.password = password
         self.worker_index = worker_index
+        # 客户端维护 msg_id 与 seq（断线重连后不重置，持续累加）
+        # msg_id：worker_index 高 32 位 + 自增计数低 32 位，保证全局唯一
+        self._seq_counter = 0
+        self._msg_id_counter = 0
 
-    def connect_and_login(self):
+    def next_msg_id_seq(self):
+        """生成下一组 (msg_id, seq)，保证单调递增"""
+        self._seq_counter += 1
+        self._msg_id_counter += 1
+        msg_id = (self.worker_index << 32) | (self._msg_id_counter & 0xFFFFFFFF)
+        return msg_id, self._seq_counter
+
+    def connect_and_login(self, last_ack_seq=0):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(DEFAULT_TIMEOUT)
         s.connect(SERVER_ADDR)
-        # 登录
-        payload = encode_login_request(self.username, self.password, self.uid)
+        # 登录，回传 last_ack_seq 水位（断线重连时使用）
+        payload = encode_login_request(self.username, self.password, self.uid, last_ack_seq)
         s.sendall(encode_base_message(1, payload))
         resp = recv_all(s, timeout=10)
         ok = False
@@ -533,7 +573,8 @@ class StressWorker:
 
     def send_one_round_chat(self, sock, target_uid, round_idx):
         content = f"W{self.worker_index} R{round_idx} {random.randint(0, 10**9)}"
-        payload = encode_one_chat(self.uid, target_uid, content, int(time.time() * 1000))
+        msg_id, seq = self.next_msg_id_seq()
+        payload = encode_one_chat(self.uid, target_uid, content, int(time.time() * 1000), msg_id, seq)
         sock.sendall(encode_base_message(6, payload))
 
     def send_one_round_register(self, reg_name):
@@ -564,7 +605,8 @@ class StressWorker:
     # 以下方法均假设 sock 已完成 LOGIN，可直接发业务消息。
     def send_one_round_add_friend(self, sock, target_uid):
         """单次加好友：发 ADD_FRIEND_MSG(8) → 循环读直到 ADD_FRIEND_MSG_ACK(9)"""
-        payload = encode_add_friend(self.uid, target_uid)
+        msg_id, seq = self.next_msg_id_seq()
+        payload = encode_add_friend(self.uid, target_uid, msg_id, seq)
         sock.sendall(encode_base_message(8, payload))
         end = time.time() + 8
         while time.time() < end:
@@ -579,7 +621,8 @@ class StressWorker:
 
     def send_one_round_del_friend(self, sock, target_uid):
         """单次删好友：发 DEL_FRIEND_MSG(10) → 循环读直到 DEL_FRIEND_MSG_ACK(11)"""
-        payload = encode_del_friend(self.uid, target_uid)
+        msg_id, seq = self.next_msg_id_seq()
+        payload = encode_del_friend(self.uid, target_uid, msg_id, seq)
         sock.sendall(encode_base_message(10, payload))
         end = time.time() + 8
         while time.time() < end:
@@ -596,7 +639,8 @@ class StressWorker:
         """单次私聊：发 ONE_CHAT_MSG(6) → 循环读直到 ONE_CHAT_MSG_ACK(7)
         与 connect_chat 模式不同：本方法假定 sock 已经登录，只压"消息发送"环节"""
         content = f"W{self.worker_index} R{round_idx} {random.randint(0, 10**9)}"
-        payload = encode_one_chat(self.uid, target_uid, content, int(time.time() * 1000))
+        msg_id, seq = self.next_msg_id_seq()
+        payload = encode_one_chat(self.uid, target_uid, content, int(time.time() * 1000), msg_id, seq)
         sock.sendall(encode_base_message(6, payload))
         end = time.time() + 5
         while time.time() < end:
@@ -613,7 +657,8 @@ class StressWorker:
         """单次群聊：发 GROUP_CHAT_MSG(18) → 循环读直到拿到 GROUP_CHAT_MSG_ACK(19)
         群聊场景下 socket 会收到大量其他成员的广播消息(18)，需跳过它们找到 ACK(19)。"""
         content = f"G{group_id} W{self.worker_index} R{round_idx} {random.randint(0, 10**9)}"
-        payload = encode_group_chat(self.uid, group_id, content, int(time.time() * 1000))
+        msg_id, seq = self.next_msg_id_seq()
+        payload = encode_group_chat(self.uid, group_id, content, int(time.time() * 1000), msg_id, seq)
         sock.sendall(encode_base_message(18, payload))
         end = time.time() + 8
         while time.time() < end:
@@ -635,7 +680,8 @@ class StressWorker:
         sent = 0
         for i in range(n_iters):
             content = f"G{group_id} W{self.worker_index} R{i} {random.randint(0, 10**9)}"
-            payload = encode_group_chat(self.uid, group_id, content, int(time.time() * 1000))
+            msg_id, seq = self.next_msg_id_seq()
+            payload = encode_group_chat(self.uid, group_id, content, int(time.time() * 1000), msg_id, seq)
             try:
                 sock.sendall(encode_base_message(18, payload))
                 sent += 1
@@ -665,7 +711,8 @@ class StressWorker:
         最后统一读 ACK。返回 (sent, ack_ok)。"""
         sent = 0
         for tgt in target_uids:
-            payload = encode_add_friend(self.uid, tgt)
+            msg_id, seq = self.next_msg_id_seq()
+            payload = encode_add_friend(self.uid, tgt, msg_id, seq)
             try:
                 sock.sendall(encode_base_message(8, payload))
                 sent += 1

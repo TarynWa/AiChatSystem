@@ -1,4 +1,5 @@
 #include "RedisMgr.hpp"
+#include <cstring>
 
 RedisMgr *RedisMgr::instance()
 {
@@ -159,4 +160,54 @@ bool RedisMgr::isUserOnline(int userid)
     bool online = (reply->type == REDIS_REPLY_INTEGER && reply->integer == 1);
     freeReplyObject(reply);
     return online;
+}
+
+// ============================================================================
+// 消息幂等去重窗实现
+// 设计：所有节点共享同一 Redis，使用 SETNX 保证 (from_id, msg_id) 全局唯一处理
+// TTL 10 分钟：覆盖客户端断线重连 + 重传的最长窗口
+// ============================================================================
+
+bool RedisMgr::tryAcquireDedup(int64_t from_id, int64_t msg_id, int ttl_seconds)
+{
+    // SET dedup:{from_id}:{msg_id} "1" NX EX 600
+    // 返回 nil 表示已存在（重复请求），返回 OK 表示首次获得
+    redisReply *reply = (redisReply *)executeCommand(
+        "SET dedup:%lld:%lld 1 NX EX %d",
+        (long long)from_id, (long long)msg_id, ttl_seconds);
+    if (!reply) return false;
+    bool acquired = (reply->type == REDIS_REPLY_STATUS && strcmp(reply->str, "OK") == 0);
+    freeReplyObject(reply);
+    return acquired;
+}
+
+bool RedisMgr::cacheAck(int64_t from_id, int64_t msg_id, const string &ack_payload, int ttl_seconds)
+{
+    // SET ack:{from_id}:{msg_id} <payload> EX 600
+    redisReply *reply = (redisReply *)executeCommand(
+        "SET ack:%lld:%lld %b EX %d",
+        (long long)from_id, (long long)msg_id,
+        ack_payload.data(), ack_payload.size(),
+        ttl_seconds);
+    if (!reply) return false;
+    bool ok = (reply->type == REDIS_REPLY_STATUS && strcmp(reply->str, "OK") == 0);
+    freeReplyObject(reply);
+    return ok;
+}
+
+bool RedisMgr::getCachedAck(int64_t from_id, int64_t msg_id, string &out_ack_payload)
+{
+    // GET ack:{from_id}:{msg_id}
+    redisReply *reply = (redisReply *)executeCommand(
+        "GET ack:%lld:%lld",
+        (long long)from_id, (long long)msg_id);
+    if (!reply) return false;
+    bool hit = false;
+    if (reply->type == REDIS_REPLY_STRING)
+    {
+        out_ack_payload.assign(reply->str, reply->len);
+        hit = true;
+    }
+    freeReplyObject(reply);
+    return hit;
 }

@@ -461,6 +461,7 @@ class LoginRequest final :
     kUsernameFieldNumber = 1,
     kPasswordFieldNumber = 2,
     kIdFieldNumber = 3,
+    kLastAckSeqFieldNumber = 4,
   };
   // string username = 1;
   void clear_username();
@@ -499,6 +500,15 @@ class LoginRequest final :
   void _internal_set_id(int64_t value);
   public:
 
+  // int32 last_ack_seq = 4;
+  void clear_last_ack_seq();
+  int32_t last_ack_seq() const;
+  void set_last_ack_seq(int32_t value);
+  private:
+  int32_t _internal_last_ack_seq() const;
+  void _internal_set_last_ack_seq(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:chat.LoginRequest)
  private:
   class _Internal;
@@ -510,6 +520,7 @@ class LoginRequest final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr username_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr password_;
     int64_t id_;
+    int32_t last_ack_seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -997,6 +1008,8 @@ class OneChatRequest final :
     kFromIdFieldNumber = 1,
     kToIdFieldNumber = 2,
     kTimestampFieldNumber = 4,
+    kMsgIdFieldNumber = 5,
+    kSeqFieldNumber = 6,
   };
   // string content = 3;
   void clear_content();
@@ -1039,6 +1052,24 @@ class OneChatRequest final :
   void _internal_set_timestamp(int64_t value);
   public:
 
+  // int64 msg_id = 5;
+  void clear_msg_id();
+  int64_t msg_id() const;
+  void set_msg_id(int64_t value);
+  private:
+  int64_t _internal_msg_id() const;
+  void _internal_set_msg_id(int64_t value);
+  public:
+
+  // int32 seq = 6;
+  void clear_seq();
+  int32_t seq() const;
+  void set_seq(int32_t value);
+  private:
+  int32_t _internal_seq() const;
+  void _internal_set_seq(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:chat.OneChatRequest)
  private:
   class _Internal;
@@ -1051,6 +1082,8 @@ class OneChatRequest final :
     int64_t from_id_;
     int64_t to_id_;
     int64_t timestamp_;
+    int64_t msg_id_;
+    int32_t seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1181,6 +1214,8 @@ class OneChatAck final :
   enum : int {
     kMsgFieldNumber = 2,
     kCodeFieldNumber = 1,
+    kMsgIdFieldNumber = 3,
+    kSeqFieldNumber = 4,
   };
   // string msg = 2;
   void clear_msg();
@@ -1205,6 +1240,24 @@ class OneChatAck final :
   void _internal_set_code(int64_t value);
   public:
 
+  // int64 msg_id = 3;
+  void clear_msg_id();
+  int64_t msg_id() const;
+  void set_msg_id(int64_t value);
+  private:
+  int64_t _internal_msg_id() const;
+  void _internal_set_msg_id(int64_t value);
+  public:
+
+  // int32 seq = 4;
+  void clear_seq();
+  int32_t seq() const;
+  void set_seq(int32_t value);
+  private:
+  int32_t _internal_seq() const;
+  void _internal_set_seq(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:chat.OneChatAck)
  private:
   class _Internal;
@@ -1215,6 +1268,8 @@ class OneChatAck final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr msg_;
     int64_t code_;
+    int64_t msg_id_;
+    int32_t seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1345,6 +1400,8 @@ class AddFriendRequest final :
   enum : int {
     kFromIdFieldNumber = 1,
     kToIdFieldNumber = 2,
+    kMsgIdFieldNumber = 3,
+    kSeqFieldNumber = 4,
   };
   // int64 from_id = 1;
   void clear_from_id();
@@ -1364,6 +1421,24 @@ class AddFriendRequest final :
   void _internal_set_to_id(int64_t value);
   public:
 
+  // int64 msg_id = 3;
+  void clear_msg_id();
+  int64_t msg_id() const;
+  void set_msg_id(int64_t value);
+  private:
+  int64_t _internal_msg_id() const;
+  void _internal_set_msg_id(int64_t value);
+  public:
+
+  // int32 seq = 4;
+  void clear_seq();
+  int32_t seq() const;
+  void set_seq(int32_t value);
+  private:
+  int32_t _internal_seq() const;
+  void _internal_set_seq(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:chat.AddFriendRequest)
  private:
   class _Internal;
@@ -1374,6 +1449,8 @@ class AddFriendRequest final :
   struct Impl_ {
     int64_t from_id_;
     int64_t to_id_;
+    int64_t msg_id_;
+    int32_t seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1504,6 +1581,8 @@ class AddFriendAck final :
   enum : int {
     kMsgFieldNumber = 2,
     kCodeFieldNumber = 1,
+    kMsgIdFieldNumber = 3,
+    kSeqFieldNumber = 4,
   };
   // string msg = 2;
   void clear_msg();
@@ -1528,6 +1607,24 @@ class AddFriendAck final :
   void _internal_set_code(int64_t value);
   public:
 
+  // int64 msg_id = 3;
+  void clear_msg_id();
+  int64_t msg_id() const;
+  void set_msg_id(int64_t value);
+  private:
+  int64_t _internal_msg_id() const;
+  void _internal_set_msg_id(int64_t value);
+  public:
+
+  // int32 seq = 4;
+  void clear_seq();
+  int32_t seq() const;
+  void set_seq(int32_t value);
+  private:
+  int32_t _internal_seq() const;
+  void _internal_set_seq(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:chat.AddFriendAck)
  private:
   class _Internal;
@@ -1538,6 +1635,8 @@ class AddFriendAck final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr msg_;
     int64_t code_;
+    int64_t msg_id_;
+    int32_t seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1668,6 +1767,8 @@ class DelFriendRequest final :
   enum : int {
     kFromIdFieldNumber = 1,
     kToIdFieldNumber = 2,
+    kMsgIdFieldNumber = 3,
+    kSeqFieldNumber = 4,
   };
   // int64 from_id = 1;
   void clear_from_id();
@@ -1687,6 +1788,24 @@ class DelFriendRequest final :
   void _internal_set_to_id(int64_t value);
   public:
 
+  // int64 msg_id = 3;
+  void clear_msg_id();
+  int64_t msg_id() const;
+  void set_msg_id(int64_t value);
+  private:
+  int64_t _internal_msg_id() const;
+  void _internal_set_msg_id(int64_t value);
+  public:
+
+  // int32 seq = 4;
+  void clear_seq();
+  int32_t seq() const;
+  void set_seq(int32_t value);
+  private:
+  int32_t _internal_seq() const;
+  void _internal_set_seq(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:chat.DelFriendRequest)
  private:
   class _Internal;
@@ -1697,6 +1816,8 @@ class DelFriendRequest final :
   struct Impl_ {
     int64_t from_id_;
     int64_t to_id_;
+    int64_t msg_id_;
+    int32_t seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1827,6 +1948,8 @@ class DelFriendAck final :
   enum : int {
     kMsgFieldNumber = 2,
     kCodeFieldNumber = 1,
+    kMsgIdFieldNumber = 3,
+    kSeqFieldNumber = 4,
   };
   // string msg = 2;
   void clear_msg();
@@ -1851,6 +1974,24 @@ class DelFriendAck final :
   void _internal_set_code(int64_t value);
   public:
 
+  // int64 msg_id = 3;
+  void clear_msg_id();
+  int64_t msg_id() const;
+  void set_msg_id(int64_t value);
+  private:
+  int64_t _internal_msg_id() const;
+  void _internal_set_msg_id(int64_t value);
+  public:
+
+  // int32 seq = 4;
+  void clear_seq();
+  int32_t seq() const;
+  void set_seq(int32_t value);
+  private:
+  int32_t _internal_seq() const;
+  void _internal_set_seq(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:chat.DelFriendAck)
  private:
   class _Internal;
@@ -1861,6 +2002,8 @@ class DelFriendAck final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr msg_;
     int64_t code_;
+    int64_t msg_id_;
+    int32_t seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -2994,6 +3137,8 @@ class GroupChatRequest final :
     kFromIdFieldNumber = 1,
     kGroupIdFieldNumber = 2,
     kTimestampFieldNumber = 4,
+    kMsgIdFieldNumber = 5,
+    kSeqFieldNumber = 6,
   };
   // string content = 3;
   void clear_content();
@@ -3036,6 +3181,24 @@ class GroupChatRequest final :
   void _internal_set_timestamp(int64_t value);
   public:
 
+  // int64 msg_id = 5;
+  void clear_msg_id();
+  int64_t msg_id() const;
+  void set_msg_id(int64_t value);
+  private:
+  int64_t _internal_msg_id() const;
+  void _internal_set_msg_id(int64_t value);
+  public:
+
+  // int32 seq = 6;
+  void clear_seq();
+  int32_t seq() const;
+  void set_seq(int32_t value);
+  private:
+  int32_t _internal_seq() const;
+  void _internal_set_seq(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:chat.GroupChatRequest)
  private:
   class _Internal;
@@ -3048,6 +3211,8 @@ class GroupChatRequest final :
     int64_t from_id_;
     int64_t group_id_;
     int64_t timestamp_;
+    int64_t msg_id_;
+    int32_t seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -3178,6 +3343,8 @@ class GroupChatAck final :
   enum : int {
     kMsgFieldNumber = 2,
     kCodeFieldNumber = 1,
+    kMsgIdFieldNumber = 3,
+    kSeqFieldNumber = 4,
   };
   // string msg = 2;
   void clear_msg();
@@ -3202,6 +3369,24 @@ class GroupChatAck final :
   void _internal_set_code(int64_t value);
   public:
 
+  // int64 msg_id = 3;
+  void clear_msg_id();
+  int64_t msg_id() const;
+  void set_msg_id(int64_t value);
+  private:
+  int64_t _internal_msg_id() const;
+  void _internal_set_msg_id(int64_t value);
+  public:
+
+  // int32 seq = 4;
+  void clear_seq();
+  int32_t seq() const;
+  void set_seq(int32_t value);
+  private:
+  int32_t _internal_seq() const;
+  void _internal_set_seq(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:chat.GroupChatAck)
  private:
   class _Internal;
@@ -3212,6 +3397,8 @@ class GroupChatAck final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr msg_;
     int64_t code_;
+    int64_t msg_id_;
+    int32_t seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -3343,6 +3530,9 @@ class CrossNodeMsg final :
     kPayloadFieldNumber = 3,
     kTargetUserIdFieldNumber = 1,
     kMsgTypeFieldNumber = 2,
+    kSeqFieldNumber = 5,
+    kMsgIdFieldNumber = 4,
+    kFromIdFieldNumber = 6,
   };
   // string payload = 3;
   void clear_payload();
@@ -3376,6 +3566,33 @@ class CrossNodeMsg final :
   void _internal_set_msg_type(int32_t value);
   public:
 
+  // int32 seq = 5;
+  void clear_seq();
+  int32_t seq() const;
+  void set_seq(int32_t value);
+  private:
+  int32_t _internal_seq() const;
+  void _internal_set_seq(int32_t value);
+  public:
+
+  // int64 msg_id = 4;
+  void clear_msg_id();
+  int64_t msg_id() const;
+  void set_msg_id(int64_t value);
+  private:
+  int64_t _internal_msg_id() const;
+  void _internal_set_msg_id(int64_t value);
+  public:
+
+  // int64 from_id = 6;
+  void clear_from_id();
+  int64_t from_id() const;
+  void set_from_id(int64_t value);
+  private:
+  int64_t _internal_from_id() const;
+  void _internal_set_from_id(int64_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:chat.CrossNodeMsg)
  private:
   class _Internal;
@@ -3387,6 +3604,9 @@ class CrossNodeMsg final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr payload_;
     int64_t target_user_id_;
     int32_t msg_type_;
+    int32_t seq_;
+    int64_t msg_id_;
+    int64_t from_id_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -3595,6 +3815,26 @@ inline void LoginRequest::_internal_set_id(int64_t value) {
 inline void LoginRequest::set_id(int64_t value) {
   _internal_set_id(value);
   // @@protoc_insertion_point(field_set:chat.LoginRequest.id)
+}
+
+// int32 last_ack_seq = 4;
+inline void LoginRequest::clear_last_ack_seq() {
+  _impl_.last_ack_seq_ = 0;
+}
+inline int32_t LoginRequest::_internal_last_ack_seq() const {
+  return _impl_.last_ack_seq_;
+}
+inline int32_t LoginRequest::last_ack_seq() const {
+  // @@protoc_insertion_point(field_get:chat.LoginRequest.last_ack_seq)
+  return _internal_last_ack_seq();
+}
+inline void LoginRequest::_internal_set_last_ack_seq(int32_t value) {
+  
+  _impl_.last_ack_seq_ = value;
+}
+inline void LoginRequest::set_last_ack_seq(int32_t value) {
+  _internal_set_last_ack_seq(value);
+  // @@protoc_insertion_point(field_set:chat.LoginRequest.last_ack_seq)
 }
 
 // -------------------------------------------------------------------
@@ -3929,6 +4169,46 @@ inline void OneChatRequest::set_timestamp(int64_t value) {
   // @@protoc_insertion_point(field_set:chat.OneChatRequest.timestamp)
 }
 
+// int64 msg_id = 5;
+inline void OneChatRequest::clear_msg_id() {
+  _impl_.msg_id_ = int64_t{0};
+}
+inline int64_t OneChatRequest::_internal_msg_id() const {
+  return _impl_.msg_id_;
+}
+inline int64_t OneChatRequest::msg_id() const {
+  // @@protoc_insertion_point(field_get:chat.OneChatRequest.msg_id)
+  return _internal_msg_id();
+}
+inline void OneChatRequest::_internal_set_msg_id(int64_t value) {
+  
+  _impl_.msg_id_ = value;
+}
+inline void OneChatRequest::set_msg_id(int64_t value) {
+  _internal_set_msg_id(value);
+  // @@protoc_insertion_point(field_set:chat.OneChatRequest.msg_id)
+}
+
+// int32 seq = 6;
+inline void OneChatRequest::clear_seq() {
+  _impl_.seq_ = 0;
+}
+inline int32_t OneChatRequest::_internal_seq() const {
+  return _impl_.seq_;
+}
+inline int32_t OneChatRequest::seq() const {
+  // @@protoc_insertion_point(field_get:chat.OneChatRequest.seq)
+  return _internal_seq();
+}
+inline void OneChatRequest::_internal_set_seq(int32_t value) {
+  
+  _impl_.seq_ = value;
+}
+inline void OneChatRequest::set_seq(int32_t value) {
+  _internal_set_seq(value);
+  // @@protoc_insertion_point(field_set:chat.OneChatRequest.seq)
+}
+
 // -------------------------------------------------------------------
 
 // OneChatAck
@@ -4003,6 +4283,46 @@ inline void OneChatAck::set_allocated_msg(std::string* msg) {
   // @@protoc_insertion_point(field_set_allocated:chat.OneChatAck.msg)
 }
 
+// int64 msg_id = 3;
+inline void OneChatAck::clear_msg_id() {
+  _impl_.msg_id_ = int64_t{0};
+}
+inline int64_t OneChatAck::_internal_msg_id() const {
+  return _impl_.msg_id_;
+}
+inline int64_t OneChatAck::msg_id() const {
+  // @@protoc_insertion_point(field_get:chat.OneChatAck.msg_id)
+  return _internal_msg_id();
+}
+inline void OneChatAck::_internal_set_msg_id(int64_t value) {
+  
+  _impl_.msg_id_ = value;
+}
+inline void OneChatAck::set_msg_id(int64_t value) {
+  _internal_set_msg_id(value);
+  // @@protoc_insertion_point(field_set:chat.OneChatAck.msg_id)
+}
+
+// int32 seq = 4;
+inline void OneChatAck::clear_seq() {
+  _impl_.seq_ = 0;
+}
+inline int32_t OneChatAck::_internal_seq() const {
+  return _impl_.seq_;
+}
+inline int32_t OneChatAck::seq() const {
+  // @@protoc_insertion_point(field_get:chat.OneChatAck.seq)
+  return _internal_seq();
+}
+inline void OneChatAck::_internal_set_seq(int32_t value) {
+  
+  _impl_.seq_ = value;
+}
+inline void OneChatAck::set_seq(int32_t value) {
+  _internal_set_seq(value);
+  // @@protoc_insertion_point(field_set:chat.OneChatAck.seq)
+}
+
 // -------------------------------------------------------------------
 
 // AddFriendRequest
@@ -4045,6 +4365,46 @@ inline void AddFriendRequest::_internal_set_to_id(int64_t value) {
 inline void AddFriendRequest::set_to_id(int64_t value) {
   _internal_set_to_id(value);
   // @@protoc_insertion_point(field_set:chat.AddFriendRequest.to_id)
+}
+
+// int64 msg_id = 3;
+inline void AddFriendRequest::clear_msg_id() {
+  _impl_.msg_id_ = int64_t{0};
+}
+inline int64_t AddFriendRequest::_internal_msg_id() const {
+  return _impl_.msg_id_;
+}
+inline int64_t AddFriendRequest::msg_id() const {
+  // @@protoc_insertion_point(field_get:chat.AddFriendRequest.msg_id)
+  return _internal_msg_id();
+}
+inline void AddFriendRequest::_internal_set_msg_id(int64_t value) {
+  
+  _impl_.msg_id_ = value;
+}
+inline void AddFriendRequest::set_msg_id(int64_t value) {
+  _internal_set_msg_id(value);
+  // @@protoc_insertion_point(field_set:chat.AddFriendRequest.msg_id)
+}
+
+// int32 seq = 4;
+inline void AddFriendRequest::clear_seq() {
+  _impl_.seq_ = 0;
+}
+inline int32_t AddFriendRequest::_internal_seq() const {
+  return _impl_.seq_;
+}
+inline int32_t AddFriendRequest::seq() const {
+  // @@protoc_insertion_point(field_get:chat.AddFriendRequest.seq)
+  return _internal_seq();
+}
+inline void AddFriendRequest::_internal_set_seq(int32_t value) {
+  
+  _impl_.seq_ = value;
+}
+inline void AddFriendRequest::set_seq(int32_t value) {
+  _internal_set_seq(value);
+  // @@protoc_insertion_point(field_set:chat.AddFriendRequest.seq)
 }
 
 // -------------------------------------------------------------------
@@ -4121,6 +4481,46 @@ inline void AddFriendAck::set_allocated_msg(std::string* msg) {
   // @@protoc_insertion_point(field_set_allocated:chat.AddFriendAck.msg)
 }
 
+// int64 msg_id = 3;
+inline void AddFriendAck::clear_msg_id() {
+  _impl_.msg_id_ = int64_t{0};
+}
+inline int64_t AddFriendAck::_internal_msg_id() const {
+  return _impl_.msg_id_;
+}
+inline int64_t AddFriendAck::msg_id() const {
+  // @@protoc_insertion_point(field_get:chat.AddFriendAck.msg_id)
+  return _internal_msg_id();
+}
+inline void AddFriendAck::_internal_set_msg_id(int64_t value) {
+  
+  _impl_.msg_id_ = value;
+}
+inline void AddFriendAck::set_msg_id(int64_t value) {
+  _internal_set_msg_id(value);
+  // @@protoc_insertion_point(field_set:chat.AddFriendAck.msg_id)
+}
+
+// int32 seq = 4;
+inline void AddFriendAck::clear_seq() {
+  _impl_.seq_ = 0;
+}
+inline int32_t AddFriendAck::_internal_seq() const {
+  return _impl_.seq_;
+}
+inline int32_t AddFriendAck::seq() const {
+  // @@protoc_insertion_point(field_get:chat.AddFriendAck.seq)
+  return _internal_seq();
+}
+inline void AddFriendAck::_internal_set_seq(int32_t value) {
+  
+  _impl_.seq_ = value;
+}
+inline void AddFriendAck::set_seq(int32_t value) {
+  _internal_set_seq(value);
+  // @@protoc_insertion_point(field_set:chat.AddFriendAck.seq)
+}
+
 // -------------------------------------------------------------------
 
 // DelFriendRequest
@@ -4163,6 +4563,46 @@ inline void DelFriendRequest::_internal_set_to_id(int64_t value) {
 inline void DelFriendRequest::set_to_id(int64_t value) {
   _internal_set_to_id(value);
   // @@protoc_insertion_point(field_set:chat.DelFriendRequest.to_id)
+}
+
+// int64 msg_id = 3;
+inline void DelFriendRequest::clear_msg_id() {
+  _impl_.msg_id_ = int64_t{0};
+}
+inline int64_t DelFriendRequest::_internal_msg_id() const {
+  return _impl_.msg_id_;
+}
+inline int64_t DelFriendRequest::msg_id() const {
+  // @@protoc_insertion_point(field_get:chat.DelFriendRequest.msg_id)
+  return _internal_msg_id();
+}
+inline void DelFriendRequest::_internal_set_msg_id(int64_t value) {
+  
+  _impl_.msg_id_ = value;
+}
+inline void DelFriendRequest::set_msg_id(int64_t value) {
+  _internal_set_msg_id(value);
+  // @@protoc_insertion_point(field_set:chat.DelFriendRequest.msg_id)
+}
+
+// int32 seq = 4;
+inline void DelFriendRequest::clear_seq() {
+  _impl_.seq_ = 0;
+}
+inline int32_t DelFriendRequest::_internal_seq() const {
+  return _impl_.seq_;
+}
+inline int32_t DelFriendRequest::seq() const {
+  // @@protoc_insertion_point(field_get:chat.DelFriendRequest.seq)
+  return _internal_seq();
+}
+inline void DelFriendRequest::_internal_set_seq(int32_t value) {
+  
+  _impl_.seq_ = value;
+}
+inline void DelFriendRequest::set_seq(int32_t value) {
+  _internal_set_seq(value);
+  // @@protoc_insertion_point(field_set:chat.DelFriendRequest.seq)
 }
 
 // -------------------------------------------------------------------
@@ -4237,6 +4677,46 @@ inline void DelFriendAck::set_allocated_msg(std::string* msg) {
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:chat.DelFriendAck.msg)
+}
+
+// int64 msg_id = 3;
+inline void DelFriendAck::clear_msg_id() {
+  _impl_.msg_id_ = int64_t{0};
+}
+inline int64_t DelFriendAck::_internal_msg_id() const {
+  return _impl_.msg_id_;
+}
+inline int64_t DelFriendAck::msg_id() const {
+  // @@protoc_insertion_point(field_get:chat.DelFriendAck.msg_id)
+  return _internal_msg_id();
+}
+inline void DelFriendAck::_internal_set_msg_id(int64_t value) {
+  
+  _impl_.msg_id_ = value;
+}
+inline void DelFriendAck::set_msg_id(int64_t value) {
+  _internal_set_msg_id(value);
+  // @@protoc_insertion_point(field_set:chat.DelFriendAck.msg_id)
+}
+
+// int32 seq = 4;
+inline void DelFriendAck::clear_seq() {
+  _impl_.seq_ = 0;
+}
+inline int32_t DelFriendAck::_internal_seq() const {
+  return _impl_.seq_;
+}
+inline int32_t DelFriendAck::seq() const {
+  // @@protoc_insertion_point(field_get:chat.DelFriendAck.seq)
+  return _internal_seq();
+}
+inline void DelFriendAck::_internal_set_seq(int32_t value) {
+  
+  _impl_.seq_ = value;
+}
+inline void DelFriendAck::set_seq(int32_t value) {
+  _internal_set_seq(value);
+  // @@protoc_insertion_point(field_set:chat.DelFriendAck.seq)
 }
 
 // -------------------------------------------------------------------
@@ -4807,6 +5287,46 @@ inline void GroupChatRequest::set_timestamp(int64_t value) {
   // @@protoc_insertion_point(field_set:chat.GroupChatRequest.timestamp)
 }
 
+// int64 msg_id = 5;
+inline void GroupChatRequest::clear_msg_id() {
+  _impl_.msg_id_ = int64_t{0};
+}
+inline int64_t GroupChatRequest::_internal_msg_id() const {
+  return _impl_.msg_id_;
+}
+inline int64_t GroupChatRequest::msg_id() const {
+  // @@protoc_insertion_point(field_get:chat.GroupChatRequest.msg_id)
+  return _internal_msg_id();
+}
+inline void GroupChatRequest::_internal_set_msg_id(int64_t value) {
+  
+  _impl_.msg_id_ = value;
+}
+inline void GroupChatRequest::set_msg_id(int64_t value) {
+  _internal_set_msg_id(value);
+  // @@protoc_insertion_point(field_set:chat.GroupChatRequest.msg_id)
+}
+
+// int32 seq = 6;
+inline void GroupChatRequest::clear_seq() {
+  _impl_.seq_ = 0;
+}
+inline int32_t GroupChatRequest::_internal_seq() const {
+  return _impl_.seq_;
+}
+inline int32_t GroupChatRequest::seq() const {
+  // @@protoc_insertion_point(field_get:chat.GroupChatRequest.seq)
+  return _internal_seq();
+}
+inline void GroupChatRequest::_internal_set_seq(int32_t value) {
+  
+  _impl_.seq_ = value;
+}
+inline void GroupChatRequest::set_seq(int32_t value) {
+  _internal_set_seq(value);
+  // @@protoc_insertion_point(field_set:chat.GroupChatRequest.seq)
+}
+
 // -------------------------------------------------------------------
 
 // GroupChatAck
@@ -4879,6 +5399,46 @@ inline void GroupChatAck::set_allocated_msg(std::string* msg) {
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:chat.GroupChatAck.msg)
+}
+
+// int64 msg_id = 3;
+inline void GroupChatAck::clear_msg_id() {
+  _impl_.msg_id_ = int64_t{0};
+}
+inline int64_t GroupChatAck::_internal_msg_id() const {
+  return _impl_.msg_id_;
+}
+inline int64_t GroupChatAck::msg_id() const {
+  // @@protoc_insertion_point(field_get:chat.GroupChatAck.msg_id)
+  return _internal_msg_id();
+}
+inline void GroupChatAck::_internal_set_msg_id(int64_t value) {
+  
+  _impl_.msg_id_ = value;
+}
+inline void GroupChatAck::set_msg_id(int64_t value) {
+  _internal_set_msg_id(value);
+  // @@protoc_insertion_point(field_set:chat.GroupChatAck.msg_id)
+}
+
+// int32 seq = 4;
+inline void GroupChatAck::clear_seq() {
+  _impl_.seq_ = 0;
+}
+inline int32_t GroupChatAck::_internal_seq() const {
+  return _impl_.seq_;
+}
+inline int32_t GroupChatAck::seq() const {
+  // @@protoc_insertion_point(field_get:chat.GroupChatAck.seq)
+  return _internal_seq();
+}
+inline void GroupChatAck::_internal_set_seq(int32_t value) {
+  
+  _impl_.seq_ = value;
+}
+inline void GroupChatAck::set_seq(int32_t value) {
+  _internal_set_seq(value);
+  // @@protoc_insertion_point(field_set:chat.GroupChatAck.seq)
 }
 
 // -------------------------------------------------------------------
@@ -4973,6 +5533,66 @@ inline void CrossNodeMsg::set_allocated_payload(std::string* payload) {
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:chat.CrossNodeMsg.payload)
+}
+
+// int64 msg_id = 4;
+inline void CrossNodeMsg::clear_msg_id() {
+  _impl_.msg_id_ = int64_t{0};
+}
+inline int64_t CrossNodeMsg::_internal_msg_id() const {
+  return _impl_.msg_id_;
+}
+inline int64_t CrossNodeMsg::msg_id() const {
+  // @@protoc_insertion_point(field_get:chat.CrossNodeMsg.msg_id)
+  return _internal_msg_id();
+}
+inline void CrossNodeMsg::_internal_set_msg_id(int64_t value) {
+  
+  _impl_.msg_id_ = value;
+}
+inline void CrossNodeMsg::set_msg_id(int64_t value) {
+  _internal_set_msg_id(value);
+  // @@protoc_insertion_point(field_set:chat.CrossNodeMsg.msg_id)
+}
+
+// int32 seq = 5;
+inline void CrossNodeMsg::clear_seq() {
+  _impl_.seq_ = 0;
+}
+inline int32_t CrossNodeMsg::_internal_seq() const {
+  return _impl_.seq_;
+}
+inline int32_t CrossNodeMsg::seq() const {
+  // @@protoc_insertion_point(field_get:chat.CrossNodeMsg.seq)
+  return _internal_seq();
+}
+inline void CrossNodeMsg::_internal_set_seq(int32_t value) {
+  
+  _impl_.seq_ = value;
+}
+inline void CrossNodeMsg::set_seq(int32_t value) {
+  _internal_set_seq(value);
+  // @@protoc_insertion_point(field_set:chat.CrossNodeMsg.seq)
+}
+
+// int64 from_id = 6;
+inline void CrossNodeMsg::clear_from_id() {
+  _impl_.from_id_ = int64_t{0};
+}
+inline int64_t CrossNodeMsg::_internal_from_id() const {
+  return _impl_.from_id_;
+}
+inline int64_t CrossNodeMsg::from_id() const {
+  // @@protoc_insertion_point(field_get:chat.CrossNodeMsg.from_id)
+  return _internal_from_id();
+}
+inline void CrossNodeMsg::_internal_set_from_id(int64_t value) {
+  
+  _impl_.from_id_ = value;
+}
+inline void CrossNodeMsg::set_from_id(int64_t value) {
+  _internal_set_from_id(value);
+  // @@protoc_insertion_point(field_set:chat.CrossNodeMsg.from_id)
 }
 
 #ifdef __GNUC__

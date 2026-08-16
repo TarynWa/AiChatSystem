@@ -130,6 +130,22 @@ bool sendType(int sockfd, chat::EnMsgType type, const google::protobuf::Message 
     return sendAndRecv(sockfd, msg, response);
 }
 
+// ---------- 客户端维护的 msg_id 与 seq ----------
+// 每发送方单调递增，断线重连后不重置，确保分布式场景下消息有序
+static int64_t g_msg_id_counter = 0;
+static int32_t g_seq_counter = 0;
+// 简易雪花算法：时间戳左移 + 自增计数，保证全局唯一且单调
+static void nextMsgIdSeq(int64_t &out_msg_id, int32_t &out_seq)
+{
+    g_seq_counter += 1;
+    g_msg_id_counter += 1;
+    int64_t ts = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count());
+    // msg_id = (timestamp_ms << 20) | counter_low_20bits
+    out_msg_id = (ts << 20) | (g_msg_id_counter & 0xFFFFF);
+    out_seq = g_seq_counter;
+}
+
 // ---------- 测试用例 ----------
 
 // 测试1：注册新用户
@@ -155,13 +171,15 @@ bool testRegister(int sockfd, const string &username, const string &password, in
 }
 
 // 测试2：登录
-bool testLogin(int sockfd, const string &username, const string &password, int64_t expectedId)
+// 改造点：传入 last_ack_seq（断线重连时同步水位），默认0表示首次登录
+bool testLogin(int sockfd, const string &username, const string &password, int64_t expectedId, int32_t last_ack_seq = 0)
 {
-    WT_LOG_INFO << "===== [TEST] 登录: " << username << " (id=" << expectedId << ") =====";
+    WT_LOG_INFO << "===== [TEST] 登录: " << username << " (id=" << expectedId << ") last_ack_seq=" << last_ack_seq << " =====";
     chat::LoginRequest req;
     req.set_username(username);
     req.set_password(password);
     req.set_id(expectedId);
+    req.set_last_ack_seq(last_ack_seq);
 
     chat::BaseMessage response;
     if (!sendType(sockfd, chat::LOGIN_MSG, req, response)) return false;
@@ -169,17 +187,22 @@ bool testLogin(int sockfd, const string &username, const string &password, int64
 
     chat::LoginRequest ack;
     if (!ack.ParseFromString(response.payload())) return false;
-    WT_LOG_INFO << "登录响应: id=" << ack.id();
+    WT_LOG_INFO << "登录响应: id=" << ack.id() << " last_ack_seq=" << ack.last_ack_seq();
     return ack.id() == expectedId;
 }
 
 // 测试3：添加好友
+// 改造点：生成 msg_id 与 seq，与服务端去重窗口配合
 bool testAddFriend(int sockfd, int fromId, int toId)
 {
     WT_LOG_INFO << "===== [TEST] 添加好友: " << fromId << " -> " << toId << " =====";
+    int64_t msg_id; int32_t seq;
+    nextMsgIdSeq(msg_id, seq);
     chat::AddFriendRequest req;
     req.set_from_id(fromId);
     req.set_to_id(toId);
+    req.set_msg_id(msg_id);
+    req.set_seq(seq);
 
     chat::BaseMessage response;
     if (!sendType(sockfd, chat::ADD_FRIEND_MSG, req, response)) return false;
@@ -187,7 +210,8 @@ bool testAddFriend(int sockfd, int fromId, int toId)
 
     chat::AddFriendAck ack;
     ack.ParseFromString(response.payload());
-    WT_LOG_INFO << "添加好友响应: code=" << ack.code() << " msg=" << ack.msg();
+    WT_LOG_INFO << "添加好友响应: code=" << ack.code() << " msg=" << ack.msg()
+                << " msg_id=" << ack.msg_id() << " seq=" << ack.seq();
     return ack.code() == 0;
 }
 
@@ -195,9 +219,13 @@ bool testAddFriend(int sockfd, int fromId, int toId)
 bool testDelFriend(int sockfd, int fromId, int toId)
 {
     WT_LOG_INFO << "===== [TEST] 删除好友: " << fromId << " -> " << toId << " =====";
+    int64_t msg_id; int32_t seq;
+    nextMsgIdSeq(msg_id, seq);
     chat::DelFriendRequest req;
     req.set_from_id(fromId);
     req.set_to_id(toId);
+    req.set_msg_id(msg_id);
+    req.set_seq(seq);
 
     chat::BaseMessage response;
     if (!sendType(sockfd, chat::DEL_FRIEND_MSG, req, response)) return false;
@@ -205,7 +233,8 @@ bool testDelFriend(int sockfd, int fromId, int toId)
 
     chat::DelFriendAck ack;
     ack.ParseFromString(response.payload());
-    WT_LOG_INFO << "删除好友响应: code=" << ack.code() << " msg=" << ack.msg();
+    WT_LOG_INFO << "删除好友响应: code=" << ack.code() << " msg=" << ack.msg()
+                << " msg_id=" << ack.msg_id() << " seq=" << ack.seq();
     return ack.code() == 0;
 }
 
@@ -249,13 +278,18 @@ bool testAddGroup(int sockfd, int userId, int groupId)
 }
 
 // 测试7：一对一私聊（离线存储）
+// 改造点：生成 msg_id 与 seq，验证服务端去重与离线存储
 bool testOneChat(int sockfd, int fromId, int toId, const string &content)
 {
     WT_LOG_INFO << "===== [TEST] 私聊: " << fromId << " -> " << toId << " =====";
+    int64_t msg_id; int32_t seq;
+    nextMsgIdSeq(msg_id, seq);
     chat::OneChatRequest req;
     req.set_from_id(fromId);
     req.set_to_id(toId);
     req.set_content(content);
+    req.set_msg_id(msg_id);
+    req.set_seq(seq);
 
     chat::BaseMessage response;
     if (!sendType(sockfd, chat::ONE_CHAT_MSG, req, response)) return false;
@@ -263,18 +297,24 @@ bool testOneChat(int sockfd, int fromId, int toId, const string &content)
 
     chat::OneChatAck ack;
     ack.ParseFromString(response.payload());
-    WT_LOG_INFO << "私聊响应: code=" << ack.code() << " msg=" << ack.msg();
+    WT_LOG_INFO << "私聊响应: code=" << ack.code() << " msg=" << ack.msg()
+                << " msg_id=" << ack.msg_id() << " seq=" << ack.seq();
     return ack.code() == 0;
 }
 
 // 测试8：群聊
+// 改造点：生成 msg_id 与 seq，验证群聊广播有序投递
 bool testGroupChat(int sockfd, int fromId, int groupId, const string &content)
 {
     WT_LOG_INFO << "===== [TEST] 群聊: from=" << fromId << " group=" << groupId << " =====";
+    int64_t msg_id; int32_t seq;
+    nextMsgIdSeq(msg_id, seq);
     chat::GroupChatRequest req;
     req.set_from_id(fromId);
     req.set_group_id(groupId);
     req.set_content(content);
+    req.set_msg_id(msg_id);
+    req.set_seq(seq);
 
     chat::BaseMessage response;
     if (!sendType(sockfd, chat::GROUP_CHAT_MSG, req, response)) return false;
@@ -282,7 +322,8 @@ bool testGroupChat(int sockfd, int fromId, int groupId, const string &content)
 
     chat::GroupChatAck ack;
     ack.ParseFromString(response.payload());
-    WT_LOG_INFO << "群聊响应: code=" << ack.code() << " msg=" << ack.msg();
+    WT_LOG_INFO << "群聊响应: code=" << ack.code() << " msg=" << ack.msg()
+                << " msg_id=" << ack.msg_id() << " seq=" << ack.seq();
     return ack.code() == 0;
 }
 

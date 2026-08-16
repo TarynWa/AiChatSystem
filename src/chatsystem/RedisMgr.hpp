@@ -43,6 +43,16 @@ public:
     // 检查用户是否在任意节点在线
     bool isUserOnline(int userid);
 
+    // ========== 消息幂等去重窗 ==========
+    // 尝试为 (from_id, msg_id) 抢占去重标记（SETNX）
+    // 返回 true 表示首次获得标记，应正常处理
+    // 返回 false 表示已存在（重复请求），调用方应直接返回缓存的 ACK
+    bool tryAcquireDedup(int64_t from_id, int64_t msg_id, int ttl_seconds = 600);
+    // 缓存 ACK payload，供重传命中时返回（避免重复执行业务）
+    bool cacheAck(int64_t from_id, int64_t msg_id, const string &ack_payload, int ttl_seconds = 600);
+    // 读取缓存的 ACK payload；返回 false 表示未命中或已过期
+    bool getCachedAck(int64_t from_id, int64_t msg_id, string &out_ack_payload);
+
 private:
     RedisMgr();
     ~RedisMgr();

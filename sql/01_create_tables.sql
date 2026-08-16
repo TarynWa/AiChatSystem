@@ -88,6 +88,9 @@ CREATE TABLE `GroupMember` (
 --    msg_type 区分消息来源：private(私聊)/group(群聊)
 --    idx_userid 索引支持按用户ID批量拉取离线消息
 --    设计为追加写表，拉取后由应用层删除
+--    msg_id 字段：客户端生成的全局唯一幂等键，用于跨节点/跨连接去重
+--    seq 字段：每发送方单调递增的顺序键，接收方按seq重排
+--    uk_from_msg 唯一索引：防止跨节点 PUBLISH 导致同一消息被多个节点重复入库
 -- ============================================================
 DROP TABLE IF EXISTS `OfflineMessage`;
 CREATE TABLE `OfflineMessage` (
@@ -96,7 +99,10 @@ CREATE TABLE `OfflineMessage` (
     `from_id`    BIGINT       NOT NULL DEFAULT 0 COMMENT '发送方用户ID',
     `msg_type`   VARCHAR(16)  NOT NULL DEFAULT 'private' COMMENT '消息类型：private/group',
     `content`    TEXT         NOT NULL COMMENT '消息内容',
+    `msg_id`     BIGINT       NOT NULL DEFAULT 0 COMMENT '幂等键：客户端生成的全局唯一ID',
+    `seq`        INT          NOT NULL DEFAULT 0 COMMENT '顺序键：每发送方单调递增',
     `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '消息生成时间',
     PRIMARY KEY (`id`),
-    KEY `idx_userid` (`userid`)
+    KEY `idx_userid` (`userid`),
+    UNIQUE KEY `uk_from_msg` (`from_id`, `msg_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='离线消息表';

@@ -88,6 +88,9 @@ public:
     bool startTransaction();
     bool commit();
     bool rollback();
+    // 转义字符串中的 SQL 特殊字符（单引号、反斜杠等），防止注入与语法错误
+    // 用于将用户内容安全拼接到 SQL 字符串字面量中
+    string escape(const string &input);
 
 private:
     shared_ptr<MYSQL> conn_;

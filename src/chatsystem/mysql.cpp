@@ -110,3 +110,16 @@ bool DB::rollback()
         return false;
     return mysql_query(conn_.get(), "ROLLBACK") == 0;
 }
+
+// 转义 SQL 字符串字面量中的特殊字符
+// 使用 mysql_real_escape_string 保证字符集正确，避免注入与语法错误
+string DB::escape(const string &input)
+{
+    if (!conn_)
+        return input;  // 退化：无连接时按原样返回（不应在生产环境出现）
+    string output;
+    output.resize(input.size() * 2 + 1);
+    size_t len = mysql_real_escape_string(conn_.get(), &output[0], input.c_str(), input.size());
+    output.resize(len);
+    return output;
+}

@@ -1,7 +1,7 @@
 #ifndef FRIENDMODEL_H
 #define FRIENDMODEL_H
 #include "User.hpp"
-#include "mysql.hpp"
+#include "storage/mysql.hpp"
 #include <vector>
 using namespace std;
 

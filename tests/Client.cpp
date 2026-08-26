@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 #include "AsyncLogging.hpp"
-#include "chat.pb.h"
+#include "proto/chat.pb.h"
 
 namespace fs = std::filesystem;
 wangt::AsyncLogging *asynclog = nullptr;

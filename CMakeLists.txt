@@ -8,6 +8,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 enable_testing()
 
 add_subdirectory(src/logSystem)
-add_subdirectory(threadpool)
+add_subdirectory(src/threadpool)
 add_subdirectory(src/chatsystem)
 add_subdirectory(tests)

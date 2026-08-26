@@ -1,14 +1,14 @@
 set(CHAT_SOURCES
-   chatserver.cpp
-   chatservice.cpp
-   chat.pb.cc
-   mysql.cpp
-   UserModel.cpp
-   PwdUtils.cpp
-   FriendModel.cpp
-   GroupModel.cpp
-   OfflineMsgModel.cpp
-   RedisMgr.cpp
+   net/chatserver.cpp
+   service/chatservice.cpp
+   proto/chat.pb.cc
+   storage/mysql.cpp
+   model/UserModel.cpp
+   util/PwdUtils.cpp
+   model/FriendModel.cpp
+   model/GroupModel.cpp
+   model/OfflineMsgModel.cpp
+   storage/RedisMgr.cpp
 )
 
 add_library(muduo_chat STATIC ${CHAT_SOURCES})

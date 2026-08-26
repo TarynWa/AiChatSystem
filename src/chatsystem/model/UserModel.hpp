@@ -1,7 +1,7 @@
 #ifndef USERMODEL_H
 #define USERMODEL_H
 #include"User.hpp"
-#include "mysql.hpp"
+#include "storage/mysql.hpp"
 //User表的数据操作类
 class UserModel
 {

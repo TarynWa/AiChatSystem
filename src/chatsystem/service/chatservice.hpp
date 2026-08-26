@@ -10,14 +10,14 @@
 #include<muduo/base/Logging.h>
 #include<muduo/base/ThreadPool.h>
 #include<arpa/inet.h>
-#include"chatserver.hpp"
-#include"chat.pb.h"
-#include"UserModel.hpp"
-#include"FriendModel.hpp"
-#include"GroupModel.hpp"
-#include"OfflineMsgModel.hpp"
-#include"RedisMgr.hpp"
-#include"PwdUtils.hpp"
+#include"net/chatserver.hpp"
+#include"proto/chat.pb.h"
+#include"model/UserModel.hpp"
+#include"model/FriendModel.hpp"
+#include"model/GroupModel.hpp"
+#include"model/OfflineMsgModel.hpp"
+#include"storage/RedisMgr.hpp"
+#include"util/PwdUtils.hpp"
 using namespace muduo;
 using namespace muduo::net;
 using namespace std;

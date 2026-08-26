@@ -5,8 +5,8 @@
 #include <thread>
 #include <chrono>
 #include"AsyncLogging.hpp"
-#include "chatserver.hpp"
-#include "chatservice.hpp"
+#include "net/chatserver.hpp"
+#include "service/chatservice.hpp"
 namespace fs = std::filesystem;
 wangt::AsyncLogging *asynclog = nullptr;
 void asyncWriteFile(const string &info)

@@ -1,7 +1,7 @@
 #ifndef GROUPMODEL_H
 #define GROUPMODEL_H
 #include "Group.hpp"
-#include "mysql.hpp"
+#include "storage/mysql.hpp"
 #include <vector>
 using namespace std;
 

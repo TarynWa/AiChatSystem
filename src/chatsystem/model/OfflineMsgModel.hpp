@@ -1,6 +1,6 @@
 #ifndef OFFLINEMSGMODEL_H
 #define OFFLINEMSGMODEL_H
-#include "mysql.hpp"
+#include "storage/mysql.hpp"
 #include <vector>
 using namespace std;
 

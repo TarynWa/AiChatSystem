@@ -1,0 +1,8 @@
+model_list:
+  - model_name: glm-4.7-flash
+    litellm_params:
+      model: zhipuai/glm-4.7-flash
+      api_key: "e9a7053b4ee24a18b66731d54e0c29fe.cCP9CoJp0ICxK9h1"
+
+general_settings:
+  enable_anthropic_compatibility: true

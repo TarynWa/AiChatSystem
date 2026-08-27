@@ -3,14 +3,12 @@
 #include<string>
 //#include"chatserver.hpp"
 #include<unordered_map>
-#include<muduo/net/TcpConnection.h>//muduo库中Tcp连接类的头文件
 #include<functional>
 #include<mutex>
 #include<memory>
-#include<muduo/base/Logging.h>
-#include<muduo/base/ThreadPool.h>
+#include<muduo/base/ThreadPool.h> // 异步 DB 工作线程池（与网络层无关，保留）
 #include<arpa/inet.h>
-#include"net/chatserver.hpp"
+#include"net/chatserver.hpp"      // 经由 nwl_bridge.hpp 引入自研网络库类型
 #include"proto/chat.pb.h"
 #include"model/UserModel.hpp"
 #include"model/FriendModel.hpp"
@@ -18,8 +16,6 @@
 #include"model/OfflineMsgModel.hpp"
 #include"storage/RedisMgr.hpp"
 #include"util/PwdUtils.hpp"
-using namespace muduo;
-using namespace muduo::net;
 using namespace std;
 using MsgHandler=function<void(const TcpConnectionPtr& conn,const string& str, Timestamp time)>;
 class chatservice
@@ -82,7 +78,7 @@ class chatservice
     std::shared_ptr<FriendModel> _friendModel = std::make_shared<FriendModel>();
     std::shared_ptr<GroupModel> _groupModel = std::make_shared<GroupModel>();
     std::shared_ptr<OfflineMsgModel> _offlineMsgModel = std::make_shared<OfflineMsgModel>();
-    ThreadPool threadpool_;
+    muduo::ThreadPool threadpool_;
 
 };
 #endif

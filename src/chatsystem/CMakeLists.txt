@@ -27,6 +27,7 @@ find_package(OpenSSL REQUIRED)
 find_path(HIREDIS_INCLUDE_DIR hiredis/hiredis.h)
 find_library(HIREDIS_LIBRARY hiredis)
 
-target_link_libraries(muduo_chat PUBLIC lib::muduo_log mysqlclient OpenSSL::Crypto ${HIREDIS_LIBRARY})
+# 网络层已切换为自研 NetWorkLibrary（nwl），回调签名与 muduo 同构（见 net/nwl_bridge.hpp）
+target_link_libraries(muduo_chat PUBLIC lib::nwl lib::muduo_log mysqlclient OpenSSL::Crypto ${HIREDIS_LIBRARY})
 
 add_library(lib::muduo_chat ALIAS muduo_chat)

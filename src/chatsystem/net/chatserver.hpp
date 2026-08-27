@@ -1,20 +1,14 @@
 #ifndef CHATSERVER_HPP
 #define CHATSERVER_HPP
-#include<muduo/net/TcpServer.h>
-#include<muduo/net/EventLoop.h>
-#include<muduo/base/ThreadPool.h>
-#include<muduo/base/Logging.h>
 #include<functional>
 #include<string>
 #include<iostream>
 #include<cstring>
 #include<arpa/inet.h>
+#include"net/nwl_bridge.hpp"   // 自研网络库（nwl）类型桥接，平替 muduo::net
 #include"service/chatservice.hpp"
 #include"AsyncLogging.hpp"
 #include"proto/chat.pb.h"
-// #include"chatservice.hpp"
-using namespace muduo;
-using namespace muduo::net;
 using namespace std;
 using namespace placeholders;
 class ChatServer

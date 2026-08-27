@@ -34,7 +34,8 @@ int main(int argc, char *argv[])
         return 1;
     }
     EventLoop loop;
-    InetAddress addr(argv[1], atoi(argv[2]));
+    // nwl::InetAddress 构造签名：(port, ip)，与 muduo (ip, port) 相反
+    InetAddress addr(atoi(argv[2]), argv[1]);
 
     // 初始化Redis连接并启动SUBSCRIBE线程（集群跨节点消息同步）
     chatservice::instance()->initRedis();
